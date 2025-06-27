@@ -40,10 +40,9 @@
 //     }
 // }
 
-const list = [[1,"Pasture A"],[2,"Barn B"],[3,"Field C"]];
 let profile = true, options = true;
 
-function displayList(){
+function displayList() {
     const ele = document.getElementById("displayListSpace");
     ele.innerHTML = `
         <div class="list-header">
@@ -60,29 +59,62 @@ function displayList(){
             </button>
         </div>
     `;
-    
-    list.forEach(item => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-            <div class="cattle-info">
-                <span class="cattle-id">${item[0]}</span>
-                <span class="cattle-place">${item[1]}</span>
-            </div>
-            <div class="cattle-actions">
-                <button class="icon-button small" onclick="viewDetails(${item[0]})">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </div>
-        `;
-        document.getElementById("dis").appendChild(li);
+
+    // Fetch cattle from backend
+    fetch("http://localhost:3001/api/cattle")
+        .then(res => res.json())
+        .then(data => {
+            const dis = document.getElementById("dis");
+            data.forEach(item => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div class="cattle-info">
+                        <span class="cattle-id">${item.tag_id}</span>
+                        <span class="cattle-place">${item.location}</span>
+                    </div>
+                    <div class="cattle-actions">
+                        <button class="icon-button small" onclick="viewDetails('${item._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                `;
+                dis.appendChild(li);
+            });
+        })
+        .catch(err => console.error("Error fetching cattle list:", err));
+}
+
+function addCattle() {
+    const tagId = prompt("Enter Tag ID:");
+    if (!tagId) return;
+
+    const place = prompt("Enter Location:");
+    if (!place) return;
+
+    // Send to backend
+    fetch("http://localhost:3001/api/cattle", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ tag_id: tagId, location: place })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("Cattle added!");
+        displayList(); // Refresh list
+    })
+    .catch(err => {
+        console.error("Error adding cattle:", err);
+        alert("Failed to add cattle.");
     });
 }
 
-function displayOption(){
+function displayOption() {
     const ele = document.getElementById("option");
     const displaySpace = document.getElementById("displayListSpace");
-    
-    if(options){
+
+    if (options) {
         ele.innerHTML = `
             <button class="button" onclick="displayList()">
                 <i class="fas fa-list"></i> Cattle List
@@ -102,25 +134,10 @@ function displayOption(){
     }
 }
 
-function addCattle() {
-    const tagId = prompt("Enter Tag ID:");
-    if (!tagId) return;
-    
-    const place = prompt("Enter Location:");
-    if (!place) return;
-    
-    // Add to list and refresh
-    list.push([tagId, place]);
-    displayList();
-    
-    // In a real app, you would send this to your backend
-    console.log("Added cattle - ID:", tagId, "Location:", place);
-}
-
-function profileDetails(){
+function profileDetails() {
     const ele = document.getElementById("profileDetail");
-    
-    if(profile){
+
+    if (profile) {
         ele.innerHTML = `
             <button class="button" onclick="editProfile()">
                 <i class="fas fa-edit"></i> Edit Profile
