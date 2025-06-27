@@ -201,3 +201,23 @@ body {
         font-size: 0.9rem;
     }
 }
+
+/* Add to your CSS */
+.add-cattle-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.add-cattle-button {
+    width: 100%;
+    max-width: 200px;
+    justify-content: center;
+}
+
+/* Make sure the list has some bottom padding */
+.cattle-list {
+    margin-bottom: 1rem;
+}

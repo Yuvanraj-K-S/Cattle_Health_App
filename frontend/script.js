@@ -48,15 +48,17 @@ function displayList(){
     ele.innerHTML = `
         <div class="list-header">
             <h2 class="list-title">Your Cattle</h2>
-            <button class="button" onclick="addCattle()">
-                <i class="fas fa-plus"></i> Add Cattle
-            </button>
         </div>
         <div class="list-header">
             <span class="cattle-id">Tag ID</span>
             <span class="cattle-place">Location</span>
         </div>
         <ul class="cattle-list" id="dis"></ul>
+        <div class="add-cattle-container">
+            <button class="button add-cattle-button" onclick="addCattle()">
+                <i class="fas fa-plus"></i> Add Cattle
+            </button>
+        </div>
     `;
     
     list.forEach(item => {
