@@ -22,6 +22,10 @@ db.once('open', () => {
 // Mongoose Schema
 const cattleSchema = new mongoose.Schema({
     tag_id: { type: String, required: true, unique: true },
+    body_temperature: {type: Number,required: true},
+    heart_rate: {type: Number,required: true},
+    sleeping_duration: {type: Number,required: true},
+    lying_down_duration: {type: Number,required: true},
     location: { type: String, required: true },
     health_status: String,
     last_checkup: Date,
@@ -38,8 +42,8 @@ app.get('/api/cattle', async (req, res) => {
 
 app.post('/api/cattle', async (req, res) => {
     try {
-        const { tag_id, location } = req.body;
-        const newCattle = new Cattle({ tag_id, location });
+        const { tag_id,body_temperature,heart_rate,sleeping_duration,lying_down_duration, location } = req.body;
+        const newCattle = new Cattle({tag_id,body_temperature,heart_rate,sleeping_duration,lying_down_duration,location});
         const result = await newCattle.save();
         res.status(201).json(result);
     } catch (e) {

@@ -1,45 +1,3 @@
-// const list = [[1,"A1"],[2,"A2"],[3,"A3"]];
-// let profile = true,options=true;
-// function displayList(){
-//     const ele = document.getElementById("displayListSpace")
-//     ele.innerHTML='<button if = "add" onclick="addCattle()">Add Cattle</button><br><p>Tag Id \t Place</p><ul id="dis"></ul>';
-//     list.forEach(item =>{
-//         const i = document.createElement("li");
-//         i.textContent = `${item[0]}  ${item[1]}`;
-//         dis.appendChild(i);
-//     })
-// }
-// function displayOption(){
-//     if(options){
-//         const ele = document.getElementById("option");
-//         ele.innerHTML='<button id="displayListButton" onclick="displayList()">Cattle List</button> <button>Alerts</button> ';
-//         options=false;
-//     }
-//     else{
-//         const ele = document.getElementById("option");
-//         ele.innerHTML=""
-//         const el = document.getElementById("displayListSpace")
-//         el.innerHTML=""
-//         options=true;
-//     }
-// }
-// function addCattle() {
-//   const tagId = prompt("Enter Tag ID:");
-//   const place = prompt("Enter Place:");
-//   console.log("ID:",tagId);
-//   console.log("Place:",place);
-// }
-// function profileDetails(){
-//     if(profile){
-//         const ele = document.getElementById("profileDetail").innerHTML="<button>Edit Profile</button><button>Alerts</button><button>Login</button>";
-//         profile = false;
-//     }
-//     else{
-//         const ele = document.getElementById("profileDetail").innerHTML="";
-//         profile = true;
-//     }
-// }
-
 let profile = true, options = true;
 
 function displayList() {
@@ -70,6 +28,10 @@ function displayList() {
                 li.innerHTML = `
                     <div class="cattle-info">
                         <span class="cattle-id">${item.tag_id}</span>
+                        <span class="Body Temperature">${item.body_temperature}</span>
+                        <span class="Heart rate">${item.heart_rate}</span>
+                        <span class="Sleeping duration">${item.sleeping_duration}</span>
+                        <span class="Lying down duration">${item.lying_down_duration}</span>
                         <span class="cattle-place">${item.location}</span>
                     </div>
                     <div class="cattle-actions">
@@ -88,6 +50,18 @@ function addCattle() {
     const tagId = prompt("Enter Tag ID:");
     if (!tagId) return;
 
+    const body_temperature = prompt("Enter Body Temperature:");
+    if (!body_temperature) return;
+
+    const heart_rate = prompt("Enter Heart rate:");
+    if (!heart_rate) return;
+
+    const sleeping_duration = prompt("Enter Sleeping Duration:");
+    if (!sleeping_duration) return;
+
+    const lying_down_duration = prompt("Enter Lying Down Duration:");
+    if (!lying_down_duration) return;
+
     const place = prompt("Enter Location:");
     if (!place) return;
 
@@ -97,7 +71,7 @@ function addCattle() {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ tag_id: tagId, location: place })
+        body: JSON.stringify({tag_id: tagId,body_temperature: parseFloat(body_temperature),heart_rate: parseInt(heart_rate),sleeping_duration: parseFloat(sleeping_duration),lying_down_duration: parseFloat(lying_down_duration),location: place})
     })
     .then(res => res.json())
     .then(data => {
