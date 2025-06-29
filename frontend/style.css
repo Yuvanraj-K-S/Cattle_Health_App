@@ -1,14 +1,18 @@
-/* General styling */
 :root {
-    --primary-color: #0077b6;
-    --primary-dark: #023e8a;
-    --primary-light: #caf0f8;
-    --secondary-color: #0096c7;
-    --background: #f8f9fa;
+    --primary-color: #2c8a67;
+    --primary-dark: #1e6f54;
+    --primary-light: #e0f2ec;
+    --secondary-color: #38a169;
+    --danger-color: #e53e3e;
+    --warning-color: #dd6b20;
+    --success-color: #38a169;
+    --info-color: #3182ce;
+    --background: #f7fafc;
     --card-bg: #ffffff;
-    --text-color: #333333;
+    --text-color: #2d3748;
+    --text-light: #718096;
     --border-radius: 12px;
-    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
 }
 
@@ -39,6 +43,9 @@ body {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .header-left, .header-right {
@@ -67,6 +74,24 @@ body {
 .icon-button:hover {
     background-color: var(--primary-light);
     color: var(--primary-dark);
+}
+
+.icon-button.small {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+}
+
+.icon-button.view {
+    color: var(--info-color);
+}
+
+.icon-button.edit {
+    color: var(--warning-color);
+}
+
+.icon-button.delete {
+    color: var(--danger-color);
 }
 
 .button {
@@ -146,6 +171,34 @@ body {
     font-weight: 600;
     color: var(--primary-color);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.health-summary {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-light);
+}
+
+.list-subheader {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1.5fr 1fr;
+    gap: 1rem;
+    padding: 0.8rem 1rem;
+    background-color: var(--primary-light);
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--primary-dark);
 }
 
 .cattle-list {
@@ -155,54 +208,76 @@ body {
 }
 
 .cattle-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 0;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 0.8rem 1rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
 }
 
-.cattle-list li:last-child {
-    border-bottom: none;
+.cattle-list li:hover {
+    background-color: var(--primary-light);
 }
 
-.cattle-info {
-    display: flex;
+.cattle-list li:not(:last-child) {
+    margin-bottom: 0.5rem;
+}
+
+.cattle-item .cattle-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1.5fr 1fr;
     gap: 1rem;
+    align-items: center;
 }
 
 .cattle-id {
     font-weight: 600;
-    min-width: 60px;
+    color: var(--primary-dark);
+}
+
+.cattle-data {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.cattle-data.normal {
+    color: var(--success-color);
+}
+
+.cattle-data.high {
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.cattle-data.low {
+    color: var(--danger-color);
+    font-weight: 600;
 }
 
 .cattle-place {
-    color: #666;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
-/* Responsive design */
-@media screen and (max-width: 768px) {
-    .app-header {
-        padding: 1rem;
-    }
-    
-    .content-area {
-        padding: 1rem;
-    }
+.cattle-actions {
+    display: flex;
+    gap: 0.3rem;
+    justify-content: flex-end;
 }
 
-@media screen and (max-width: 480px) {
-    .app-header h1 {
-        font-size: 1.2rem;
-    }
-    
-    .button {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-    }
+.no-cattle, .error {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+    font-style: italic;
 }
 
-/* Add to your CSS */
+.error {
+    color: var(--danger-color);
+}
+
+/* Add cattle button */
 .add-cattle-container {
     display: flex;
     justify-content: center;
@@ -217,7 +292,58 @@ body {
     justify-content: center;
 }
 
-/* Make sure the list has some bottom padding */
-.cattle-list {
-    margin-bottom: 1rem;
+/* Responsive design */
+@media screen and (max-width: 992px) {
+    .cattle-item .cattle-info,
+    .list-subheader {
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    }
+    
+    .cattle-place, .cattle-actions {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .app-header {
+        padding: 1rem;
+    }
+    
+    .content-area {
+        padding: 1rem;
+    }
+    
+    .health-summary {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .cattle-item .cattle-info,
+    .list-subheader {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    
+    .cattle-data:nth-child(4), .cattle-data:nth-child(5) {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .app-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .cattle-item .cattle-info,
+    .list-subheader {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .cattle-data:nth-child(3) {
+        display: none;
+    }
 }
