@@ -70,6 +70,9 @@ function displayList() {
                             <button class="icon-button small edit" onclick="editCattle('${item._id}')">
                                 <i class="fas fa-edit"></i>
                             </button>
+                            <button class="icon-button small health" onclick="checkHealth('${item._id}', ${item.body_temperature}, ${item.heart_rate}, ${item.sleeping_duration}, ${item.lying_down_duration})">
+                                <i class="fas fa-heartbeat"></i>
+                            </button>
                             <button class="icon-button small delete" onclick="removeCattle('${item._id}', '${item.tag_id}')">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -185,14 +188,11 @@ function removeCattle(id, tagId) {
 }
 
 function editCattle(id) {
-    // In a real app, you would show a proper edit form
     alert(`Edit functionality for cattle with ID: ${id} would go here`);
-    // You could implement a similar approach as addCattle but with a PUT request
 }
 
 function displayOption() {
     const ele = document.getElementById("option");
-    const displaySpace = document.getElementById("displayListSpace");
 
     if (options) {
         ele.innerHTML = `
@@ -266,6 +266,92 @@ function logout() {
 }
 
 function viewDetails(id) {
-    // In a real app, you would fetch detailed info from the backend
     alert(`Viewing detailed health metrics for cattle with ID: ${id}\nThis would show a detailed view with historical data.`);
+}
+
+function checkHealth(cattleId, bodyTemp, heartRate, sleepDuration, lyingDuration) {
+    // Show loading indicator
+    const loading = Swal.fire({
+        title: 'Analyzing Health...',
+        html: 'Please wait while we analyze the cattle health data',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Prepare data for prediction
+    const healthData = {
+        body_temperature: bodyTemp,
+        heart_rate: heartRate,
+        sleeping_duration: sleepDuration,
+        lying_down_duration: lyingDuration
+    };
+
+    // Call prediction API
+    fetch('http://localhost:5000/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(healthData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        loading.close();
+        
+        if (data.error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error,
+                confirmButtonColor: '#3085d6'
+            });
+            return;
+        }
+
+        // Show result based on prediction
+        if (data.status === 'healthy') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Healthy Cattle',
+                html: `
+                    <div style="text-align: left; margin-top: 1rem;">
+                        <p><strong>Health Status:</strong> <span style="color: #38a169;">Healthy</span></p>
+                        <p><strong>Confidence:</strong> ${(data.probability * 100).toFixed(1)}%</p>
+                        <p><strong>Body Temperature:</strong> ${bodyTemp}°C</p>
+                        <p><strong>Heart Rate:</strong> ${heartRate} bpm</p>
+                    </div>
+                `,
+                confirmButtonColor: '#38a169',
+                background: '#f0fff4'
+            });
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Health Risk Detected',
+                html: `
+                    <div style="text-align: left; margin-top: 1rem;">
+                        <p><strong>Health Status:</strong> <span style="color: #e53e3e;">At Risk</span></p>
+                        <p><strong>Confidence:</strong> ${(data.probability * 100).toFixed(1)}%</p>
+                        <p><strong>Body Temperature:</strong> ${bodyTemp}°C</p>
+                        <p><strong>Heart Rate:</strong> ${heartRate} bpm</p>
+                        <p style="margin-top: 1rem;"><i class="fas fa-exclamation-triangle"></i> Please consult a veterinarian</p>
+                    </div>
+                `,
+                confirmButtonColor: '#e53e3e',
+                background: '#fff5f5'
+            });
+        }
+    })
+    .catch(error => {
+        loading.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to analyze health data. Please try again.',
+            confirmButtonColor: '#3085d6'
+        });
+        console.error('Prediction error:', error);
+    });
 }

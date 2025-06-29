@@ -25,7 +25,6 @@ body {
     line-height: 1.6;
 }
 
-/* Header */
 .app-header {
     display: flex;
     justify-content: space-between;
@@ -54,7 +53,6 @@ body {
     position: relative;
 }
 
-/* Buttons */
 .icon-button {
     background: none;
     border: none;
@@ -90,6 +88,10 @@ body {
     color: var(--warning-color);
 }
 
+.icon-button.health {
+    color: var(--info-color);
+}
+
 .icon-button.delete {
     color: var(--danger-color);
 }
@@ -118,7 +120,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* Dropdowns */
 .dropdown-content {
     position: absolute;
     top: 100%;
@@ -138,7 +139,6 @@ body {
     right: auto;
 }
 
-/* Content area */
 .content-area {
     padding: 2rem;
     max-width: 1200px;
@@ -153,7 +153,6 @@ body {
     margin-top: 1rem;
 }
 
-/* List styling */
 #displayListSpace {
     width: 100%;
 }
@@ -277,7 +276,6 @@ body {
     color: var(--danger-color);
 }
 
-/* Add cattle button */
 .add-cattle-container {
     display: flex;
     justify-content: center;
@@ -292,7 +290,31 @@ body {
     justify-content: center;
 }
 
-/* Responsive design */
+.swal2-popup {
+    border-radius: var(--border-radius) !important;
+}
+
+.swal2-title {
+    font-size: 1.2rem !important;
+}
+
+.swal2-content {
+    font-size: 1rem !important;
+}
+
+.swal2-success {
+    border-color: var(--success-color) !important;
+}
+
+.swal2-success [class^=swal2-success-line] {
+    background-color: var(--success-color) !important;
+}
+
+.swal2-warning {
+    border-color: var(--warning-color) !important;
+    color: var(--warning-color) !important;
+}
+
 @media screen and (max-width: 992px) {
     .cattle-item .cattle-info,
     .list-subheader {
