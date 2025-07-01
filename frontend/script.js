@@ -5,73 +5,119 @@ window.onload = displayList;
 
 function displayList() {
     const ele = document.getElementById("displayListSpace");
+    if (!ele) {
+        console.error("displayListSpace element not found");
+        return;
+    }
+
     ele.innerHTML = `
         <div class="list-header">
             <h2 class="list-title"><i class="fas fa-list"></i> Your Cattle</h2>
             <div class="health-summary">
                 <span class="summary-item"><i class="fas fa-thermometer-half"></i> Avg Temp: <span id="avgTemp">-</span></span>
                 <span class="summary-item"><i class="fas fa-heartbeat"></i> Avg Heart Rate: <span id="avgHeart">-</span></span>
+                <span class="summary-item"><i class="fas fa-database"></i> Total Cattle: <span id="totalCattle">-</span></span>
             </div>
         </div>
         <div class="list-subheader">
             <span class="cattle-id">Tag ID</span>
-            <span class="cattle-data">Temp (°C)</span>
-            <span class="cattle-data">Heart Rate</span>
-            <span class="cattle-data">Sleep (hrs)</span>
-            <span class="cattle-data">Lying (hrs)</span>
+            <span class="cattle-data">Avg Temp (°C)</span>
+            <span class="cattle-data">Avg Heart Rate</span>
+            <span class="cattle-data">Readings</span>
             <span class="cattle-place">Location</span>
             <span class="cattle-actions">Actions</span>
         </div>
         <ul class="cattle-list" id="dis"></ul>
         <div class="add-cattle-container">
-            <button class="button add-cattle-button" onclick="addCattle()">
-                <i class="fas fa-plus"></i> Add Cattle
+            <button class="button add-cattle-button" onclick="addNewCattle()">
+                <i class="fas fa-plus"></i> Add New Cattle
             </button>
         </div>
     `;
 
-    // Fetch cattle from backend
+    const dis = document.getElementById("dis");
+    if (!dis) {
+        console.error("Cattle list element (dis) not found");
+        return;
+    }
+
     fetch("http://localhost:3001/api/cattle")
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })
         .then(data => {
-            const dis = document.getElementById("dis");
-            let totalTemp = 0, totalHeart = 0, count = data.length;
+            // Clear previous content safely
+            while (dis.firstChild) {
+                dis.removeChild(dis.firstChild);
+            }
             
-            // Clear previous list
-            dis.innerHTML = '';
+            console.log("API Response:", data);
             
-            if (count === 0) {
-                dis.innerHTML = '<li class="no-cattle">No cattle found. Add your first cattle!</li>';
+            if (!Array.isArray(data)) {
+                const errorMsg = data.error || 'Invalid data format received from server';
+                const errorItem = document.createElement("li");
+                errorItem.className = "error";
+                errorItem.textContent = errorMsg;
+                dis.appendChild(errorItem);
                 return;
             }
             
+            if (data.length === 0) {
+                const noCattleItem = document.createElement("li");
+                noCattleItem.className = "no-cattle";
+                noCattleItem.textContent = "No cattle found. Add your first cattle!";
+                dis.appendChild(noCattleItem);
+                return;
+            }
+            
+            // Update summary
+            const totalCattleEl = document.getElementById("totalCattle");
+            const avgTempEl = document.getElementById("avgTemp");
+            const avgHeartEl = document.getElementById("avgHeart");
+            
+            if (totalCattleEl) totalCattleEl.textContent = data.length;
+            
+            // Calculate averages for summary
+            const validCattle = data.filter(item => item.avg_temp !== null && item.avg_heart !== null);
+            const avgTemp = validCattle.length > 0 
+                ? validCattle.reduce((sum, item) => sum + item.avg_temp, 0) / validCattle.length 
+                : 0;
+            const avgHeart = validCattle.length > 0
+                ? validCattle.reduce((sum, item) => sum + item.avg_heart, 0) / validCattle.length
+                : 0;
+            
+            if (avgTempEl) avgTempEl.textContent = avgTemp.toFixed(1) + '°C';
+            if (avgHeartEl) avgHeartEl.textContent = Math.round(avgHeart) + ' bpm';
+            
+            // Process each cattle item
             data.forEach(item => {
-                totalTemp += item.body_temperature;
-                totalHeart += item.heart_rate;
-                
                 const li = document.createElement("li");
                 li.className = "cattle-item";
                 li.innerHTML = `
                     <div class="cattle-info">
                         <span class="cattle-id">${item.tag_id}</span>
-                        <span class="cattle-data ${getHealthClass(item.body_temperature, 'temp')}">
-                            ${item.body_temperature.toFixed(1)} <i class="fas ${getTempIcon(item.body_temperature)}"></i>
+                        <span class="cattle-data ${getHealthClass(item.avg_temp, 'temp')}">
+                            ${item.avg_temp !== null ? item.avg_temp.toFixed(1) : 'N/A'}°C
                         </span>
-                        <span class="cattle-data ${getHealthClass(item.heart_rate, 'heart')}">
-                            ${item.heart_rate} <i class="fas ${getHeartIcon(item.heart_rate)}"></i>
+                        <span class="cattle-data ${getHealthClass(item.avg_heart, 'heart')}">
+                            ${item.avg_heart !== null ? Math.round(item.avg_heart) : 'N/A'} bpm
                         </span>
-                        <span class="cattle-data">${item.sleeping_duration.toFixed(1)}</span>
-                        <span class="cattle-data">${item.lying_down_duration.toFixed(1)}</span>
-                        <span class="cattle-place"><i class="fas fa-map-marker-alt"></i> ${item.location}</span>
+                        <span class="cattle-readings">
+                            ${item.readings_count} reading(s)
+                        </span>
+                        <span class="cattle-place">${item.location}</span>
                         <div class="cattle-actions">
+                            <button class="icon-button small add" onclick="addCattleReading('${item._id}')">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
+                            <button class="icon-button small health" onclick="analyzeHealth('${item._id}')">
+                                <i class="fas fa-heartbeat"></i>
+                            </button>
                             <button class="icon-button small view" onclick="viewDetails('${item._id}')">
                                 <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="icon-button small edit" onclick="editCattle('${item._id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="icon-button small health" onclick="checkHealth('${item._id}', ${item.body_temperature}, ${item.heart_rate}, ${item.sleeping_duration}, ${item.lying_down_duration})">
-                                <i class="fas fa-heartbeat"></i>
                             </button>
                             <button class="icon-button small delete" onclick="removeCattle('${item._id}', '${item.tag_id}')">
                                 <i class="fas fa-trash"></i>
@@ -81,18 +127,271 @@ function displayList() {
                 `;
                 dis.appendChild(li);
             });
-            
-            // Update averages
-            document.getElementById("avgTemp").textContent = (totalTemp/count).toFixed(1);
-            document.getElementById("avgHeart").textContent = Math.round(totalHeart/count);
         })
         .catch(err => {
-            console.error("Error fetching cattle list:", err);
-            document.getElementById("dis").innerHTML = '<li class="error">Error loading cattle data. Please try again.</li>';
+            console.error("Error:", err);
+            const errorItem = document.createElement("li");
+            errorItem.className = "error";
+            errorItem.textContent = 'Error loading data: ' + err.message;
+            if (dis) {
+                dis.appendChild(errorItem);
+            } else {
+                console.error("Could not display error - cattle list element not found");
+            }
         });
 }
 
+// Health analysis functions
+async function analyzeHealth(cattleId) {
+    try {
+        const loading = Swal.fire({
+            title: 'Analyzing Health...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        // Get all readings
+        const readingsRes = await fetch(`http://localhost:3001/api/cattle/${cattleId}/readings`);
+        if (!readingsRes.ok) {
+            throw new Error('Failed to fetch readings');
+        }
+        const readings = await readingsRes.json();
+        
+        if (!readings || !readings.length) {
+            await loading.close();
+            return Swal.fire('No Data', 'No health readings available for this cattle', 'info');
+        }
+
+        // Analyze each reading
+        const analysis = await Promise.all(
+            readings.map(reading => 
+                fetch('http://localhost:5000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reading)
+                })
+                .then(res => res.ok ? res.json() : Promise.reject('Prediction failed'))
+            )
+        );
+
+        await loading.close();
+        
+        // Count results
+        const healthyCount = analysis.filter(a => a && a.status === 'healthy').length;
+        const atRiskCount = analysis.length - healthyCount;
+        
+        // Determine overall status
+        let status, icon, title, color;
+        if (healthyCount > atRiskCount) {
+            status = 'healthy';
+            icon = 'success';
+            title = 'Generally Healthy';
+            color = '#38a169';
+        } else if (atRiskCount > healthyCount) {
+            status = 'at risk';
+            icon = 'error';
+            title = 'Health Risk Detected';
+            color = '#e53e3e';
+        } else {
+            status = 'uncertain';
+            icon = 'warning';
+            title = 'Inconclusive Results';
+            color = '#dd6b20';
+        }
+
+        // Show results
+        return Swal.fire({
+            icon,
+            title,
+            html: `
+                <div class="health-analysis-summary">
+                    <p><strong>Analysis of ${readings.length} readings:</strong></p>
+                    <div class="health-metric">
+                        <span>✅ Healthy Readings:</span>
+                        <span>${healthyCount}</span>
+                    </div>
+                    <div class="health-metric">
+                        <span>⚠️ At-Risk Readings:</span>
+                        <span>${atRiskCount}</span>
+                    </div>
+                    <div class="health-status" style="color: ${color}">
+                        Overall Status: ${status.toUpperCase()}
+                    </div>
+                    ${status !== 'healthy' ? 
+                        '<p><i class="fas fa-exclamation-triangle"></i> Please consider veterinary consultation</p>' : ''}
+                </div>
+            `,
+            confirmButtonColor: color
+        });
+    } catch (error) {
+        console.error('Analysis error:', error);
+        Swal.fire('Error', 'Failed to analyze health data: ' + error, 'error');
+    }
+}
+
+// Cattle management functions
+function addNewCattle() {
+    Swal.fire({
+        title: 'Add New Cattle',
+        html: `
+            <input id="tag_id" class="swal2-input" placeholder="Tag ID" required>
+            <input id="location" class="swal2-input" placeholder="Location" required>
+            <input id="temp" class="swal2-input" placeholder="Body Temp (°C)" type="number" step="0.1" required>
+            <input id="heart" class="swal2-input" placeholder="Heart Rate (bpm)" type="number" required>
+            <input id="sleep" class="swal2-input" placeholder="Sleep Duration (hrs)" type="number" step="0.1" required>
+            <input id="lying" class="swal2-input" placeholder="Lying Duration (hrs)" type="number" step="0.1" required>
+        `,
+        focusConfirm: false,
+        preConfirm: () => {
+            const values = {
+                tag_id: document.getElementById('tag_id').value,
+                location: document.getElementById('location').value,
+                body_temperature: parseFloat(document.getElementById('temp').value),
+                heart_rate: parseInt(document.getElementById('heart').value),
+                sleeping_duration: parseFloat(document.getElementById('sleep').value),
+                lying_down_duration: parseFloat(document.getElementById('lying').value)
+            };
+            
+            // Validate inputs
+            if (!values.tag_id || !values.location || isNaN(values.body_temperature) || 
+                isNaN(values.heart_rate) || isNaN(values.sleeping_duration) || isNaN(values.lying_down_duration)) {
+                Swal.showValidationMessage('Please fill all fields with valid values');
+                return false;
+            }
+            return values;
+        }
+    }).then(result => {
+        if (result.isConfirmed && result.value) {
+            const loading = Swal.fire({
+                title: 'Adding Cattle...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            fetch("http://localhost:3001/api/cattle", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(result.value)
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to add cattle');
+                return data;
+            })
+            .then(() => {
+                loading.close();
+                Swal.fire('Success', 'Cattle added successfully', 'success');
+                displayList();
+            })
+            .catch(err => {
+                loading.close();
+                console.error("Error:", err);
+                Swal.fire('Error', err.message || 'Failed to add cattle', 'error');
+            });
+        }
+    });
+}
+
+function addCattleReading(cattleId) {
+    Swal.fire({
+        title: 'Add Health Reading',
+        html: `
+            <input id="temp" class="swal2-input" placeholder="Body Temp (°C)" type="number" step="0.1" required>
+            <input id="heart" class="swal2-input" placeholder="Heart Rate (bpm)" type="number" required>
+            <input id="sleep" class="swal2-input" placeholder="Sleep Duration (hrs)" type="number" step="0.1" required>
+            <input id="lying" class="swal2-input" placeholder="Lying Duration (hrs)" type="number" step="0.1" required>
+        `,
+        focusConfirm: false,
+        preConfirm: () => {
+            const values = {
+                body_temperature: parseFloat(document.getElementById('temp').value),
+                heart_rate: parseInt(document.getElementById('heart').value),
+                sleeping_duration: parseFloat(document.getElementById('sleep').value),
+                lying_down_duration: parseFloat(document.getElementById('lying').value)
+            };
+            
+            if (isNaN(values.body_temperature) || isNaN(values.heart_rate) || 
+               isNaN(values.sleeping_duration) || isNaN(values.lying_down_duration)) {
+                Swal.showValidationMessage('Please fill all fields with valid values');
+                return false;
+            }
+            return values;
+        }
+    }).then(result => {
+        if (result.isConfirmed && result.value) {
+            const loading = Swal.fire({
+                title: 'Adding Reading...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            fetch(`http://localhost:3001/api/cattle/${cattleId}/readings`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(result.value)
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to add reading');
+                return data;
+            })
+            .then(() => {
+                loading.close();
+                Swal.fire('Success', 'Reading added successfully', 'success');
+                displayList();
+            })
+            .catch(err => {
+                loading.close();
+                console.error("Error:", err);
+                Swal.fire('Error', err.message || 'Failed to add reading', 'error');
+            });
+        }
+    });
+}
+
+function removeCattle(id, tagId) {
+    Swal.fire({
+        title: 'Confirm Removal',
+        html: `Are you sure you want to remove cattle <strong>${tagId}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const loading = Swal.fire({
+                title: 'Removing Cattle...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            fetch(`http://localhost:3001/api/cattle/${id}`, {
+                method: "DELETE"
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to remove cattle');
+                return data;
+            })
+            .then(() => {
+                loading.close();
+                Swal.fire('Removed!', 'Cattle has been removed.', 'success');
+                displayList();
+            })
+            .catch(err => {
+                loading.close();
+                console.error("Error:", err);
+                Swal.fire('Error', err.message || 'Failed to remove cattle', 'error');
+            });
+        }
+    });
+}
+
+// Helper functions
 function getHealthClass(value, type) {
+    if (value === null || value === undefined) return '';
     if (type === 'temp') {
         if (value < 37.5) return 'low';
         if (value > 39.5) return 'high';
@@ -105,253 +404,25 @@ function getHealthClass(value, type) {
     return '';
 }
 
-function getTempIcon(temp) {
-    if (temp < 37.5) return 'fa-temperature-low';
-    if (temp > 39.5) return 'fa-temperature-high';
-    return 'fa-temperature-empty';
-}
-
-function getHeartIcon(rate) {
-    if (rate < 60) return 'fa-heart-broken';
-    if (rate > 80) return 'fa-heartbeat';
-    return 'fa-heart';
-}
-
-function addCattle() {
-    const tagId = prompt("Enter Cattle Tag ID:");
-    if (!tagId) return;
-
-    const body_temperature = prompt("Enter Body Temperature (°C):");
-    if (!body_temperature) return;
-
-    const heart_rate = prompt("Enter Heart Rate (bpm):");
-    if (!heart_rate) return;
-
-    const sleeping_duration = prompt("Enter Sleeping Duration (hours):");
-    if (!sleeping_duration) return;
-
-    const lying_down_duration = prompt("Enter Lying Down Duration (hours):");
-    if (!lying_down_duration) return;
-
-    const place = prompt("Enter Location:");
-    if (!place) return;
-
-    // Send to backend
-    fetch("http://localhost:3001/api/cattle", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            tag_id: tagId,
-            body_temperature: parseFloat(body_temperature),
-            heart_rate: parseInt(heart_rate),
-            sleeping_duration: parseFloat(sleeping_duration),
-            lying_down_duration: parseFloat(lying_down_duration),
-            location: place
-        })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('Failed to add cattle');
-        return res.json();
-    })
-    .then(() => {
-        alert("Cattle added successfully!");
-        displayList(); // Refresh list
-    })
-    .catch(err => {
-        console.error("Error adding cattle:", err);
-        alert("Failed to add cattle: " + err.message);
-    });
-}
-
-function removeCattle(id, tagId) {
-    if (!confirm(`Are you sure you want to remove cattle with Tag ID: ${tagId}?`)) {
-        return;
-    }
-
-    fetch(`http://localhost:3001/api/cattle/${id}`, {
-        method: "DELETE"
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('Failed to remove cattle');
-        return res.json();
-    })
-    .then(() => {
-        alert("Cattle removed successfully!");
-        displayList(); // Refresh list
-    })
-    .catch(err => {
-        console.error("Error removing cattle:", err);
-        alert("Failed to remove cattle: " + err.message);
-    });
-}
-
-function editCattle(id) {
-    alert(`Edit functionality for cattle with ID: ${id} would go here`);
-}
-
-function displayOption() {
-    const ele = document.getElementById("option");
-
-    if (options) {
-        ele.innerHTML = `
-            <button class="button" onclick="displayList()">
-                <i class="fas fa-list"></i> Cattle List
-            </button>
-            <button class="button" onclick="showAlerts()">
-                <i class="fas fa-bell"></i> Alerts
-            </button>
-            <button class="button" onclick="showSettings()">
-                <i class="fas fa-cog"></i> Settings
-            </button>
-        `;
-        options = false;
-    } else {
-        ele.innerHTML = "";
-        options = true;
-    }
-}
-
-function showAlerts() {
-    document.getElementById("displayListSpace").innerHTML = `
-        <div class="list-header">
-            <h2 class="list-title"><i class="fas fa-bell"></i> Health Alerts</h2>
-        </div>
-        <div class="alert-list">
-            <p>Alert functionality would be implemented here</p>
-        </div>
-    `;
-}
-
-function showSettings() {
-    document.getElementById("displayListSpace").innerHTML = `
-        <div class="list-header">
-            <h2 class="list-title"><i class="fas fa-cog"></i> Settings</h2>
-        </div>
-        <div class="settings-form">
-            <p>Settings functionality would be implemented here</p>
-        </div>
-    `;
-}
-
-function profileDetails() {
-    const ele = document.getElementById("profileDetail");
-
-    if (profile) {
-        ele.innerHTML = `
-            <button class="button" onclick="editProfile()">
-                <i class="fas fa-edit"></i> Edit Profile
-            </button>
-            <button class="button" onclick="showAlerts()">
-                <i class="fas fa-bell"></i> Alerts
-            </button>
-            <button class="button" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-        `;
-        profile = false;
-    } else {
-        ele.innerHTML = "";
-        profile = true;
-    }
-}
-
-function editProfile() {
-    alert("Edit profile functionality would go here");
-}
-
-function logout() {
-    alert("Logout functionality would go here");
-}
-
 function viewDetails(id) {
-    alert(`Viewing detailed health metrics for cattle with ID: ${id}\nThis would show a detailed view with historical data.`);
-}
-
-function checkHealth(cattleId, bodyTemp, heartRate, sleepDuration, lyingDuration) {
-    // Show loading indicator
-    const loading = Swal.fire({
-        title: 'Analyzing Health...',
-        html: 'Please wait while we analyze the cattle health data',
+    // Implement detailed view with historical data
+    Swal.fire({
+        title: 'Cattle Details',
+        html: `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i> Loading details...
+            </div>
+        `,
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        showConfirmButton: false
     });
-
-    // Prepare data for prediction
-    const healthData = {
-        body_temperature: bodyTemp,
-        heart_rate: heartRate,
-        sleeping_duration: sleepDuration,
-        lying_down_duration: lyingDuration
-    };
-
-    // Call prediction API
-    fetch('http://localhost:5000/predict', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(healthData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        loading.close();
-        
-        if (data.error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.error,
-                confirmButtonColor: '#3085d6'
-            });
-            return;
-        }
-
-        // Show result based on prediction
-        if (data.status === 'healthy') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Healthy Cattle',
-                html: `
-                    <div style="text-align: left; margin-top: 1rem;">
-                        <p><strong>Health Status:</strong> <span style="color: #38a169;">Healthy</span></p>
-                        <p><strong>Confidence:</strong> ${(data.probability * 100).toFixed(1)}%</p>
-                        <p><strong>Body Temperature:</strong> ${bodyTemp}°C</p>
-                        <p><strong>Heart Rate:</strong> ${heartRate} bpm</p>
-                    </div>
-                `,
-                confirmButtonColor: '#38a169',
-                background: '#f0fff4'
-            });
-        } else {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Health Risk Detected',
-                html: `
-                    <div style="text-align: left; margin-top: 1rem;">
-                        <p><strong>Health Status:</strong> <span style="color: #e53e3e;">At Risk</span></p>
-                        <p><strong>Confidence:</strong> ${(data.probability * 100).toFixed(1)}%</p>
-                        <p><strong>Body Temperature:</strong> ${bodyTemp}°C</p>
-                        <p><strong>Heart Rate:</strong> ${heartRate} bpm</p>
-                        <p style="margin-top: 1rem;"><i class="fas fa-exclamation-triangle"></i> Please consult a veterinarian</p>
-                    </div>
-                `,
-                confirmButtonColor: '#e53e3e',
-                background: '#fff5f5'
-            });
-        }
-    })
-    .catch(error => {
-        loading.close();
+    
+    // In a real app, you would fetch detailed data here
+    setTimeout(() => {
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to analyze health data. Please try again.',
-            confirmButtonColor: '#3085d6'
+            title: 'Cattle Details',
+            html: 'Detailed view with historical data would be shown here',
+            icon: 'info'
         });
-        console.error('Prediction error:', error);
-    });
+    }, 1000);
 }

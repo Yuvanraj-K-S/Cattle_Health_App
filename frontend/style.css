@@ -369,3 +369,41 @@ body {
         display: none;
     }
 }
+/* Add these to your existing CSS */
+.cattle-readings {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.icon-button.add {
+    color: var(--success-color);
+}
+
+.icon-button.add:hover {
+    background-color: rgba(56, 161, 105, 0.1);
+}
+
+.swal2-popup .swal2-input {
+    margin: 0.5rem auto;
+}
+
+.health-analysis-summary {
+    text-align: left;
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    background-color: #f8f9fa;
+}
+
+.health-metric {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.3rem 0;
+}
+
+.health-status {
+    font-weight: bold;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eee;
+}
