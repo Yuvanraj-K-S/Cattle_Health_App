@@ -67,6 +67,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: var(--transition);
+    position: relative;
 }
 
 .icon-button:hover {
@@ -406,4 +407,228 @@ body {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
     border-top: 1px solid #eee;
+}
+
+/* Add new styles for alert indicator */
+.alert-indicator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background-color: var(--danger-color);
+    border-radius: 50%;
+    border: 2px solid var(--card-bg);
+    display: none;
+}
+
+.has-alerts .alert-indicator {
+    display: block;
+}
+
+/* Add styles for alerts section */
+.alerts-section {
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.alert-item {
+    padding: 0.8rem;
+    border-radius: var(--border-radius);
+    background-color: var(--primary-light);
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--danger-color);
+}
+
+.alert-item:last-child {
+    margin-bottom: 0;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.alert-time {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.alert-message {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.no-alerts {
+    text-align: center;
+    color: var(--text-light);
+    padding: 1rem;
+}
+
+/* Profile Menu Styles */
+.profile-menu {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--primary-light);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.menu-item:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.menu-item i {
+    width: 20px;
+    text-align: center;
+}
+
+.alert-count {
+    margin-left: auto;
+    background-color: var(--danger-color);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    display: none;
+}
+
+.alert-count.has-alerts {
+    display: inline-block;
+}
+
+/* Profile Content */
+.profile-content {
+    padding: 1rem;
+    display: none;
+}
+
+/* Alerts Section */
+.alerts-section {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.alerts-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--primary-light);
+    position: sticky;
+    top: 0;
+    background-color: var(--card-bg);
+    z-index: 1;
+}
+
+.alerts-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.back-button:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.alert-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--primary-light);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.alert-item:hover {
+    background-color: var(--primary-light);
+}
+
+.alert-item.read {
+    opacity: 0.7;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+
+.alert-title {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.alert-time {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.alert-message {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.alert-status {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.alert-status.risk {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.no-alerts {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+}
+
+/* Click Outside Handler */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    display: none;
+    z-index: 90;
+}
+
+.overlay.active {
+    display: block;
 }

@@ -11,10 +11,35 @@
 <body>
     <header class="app-header">
         <div class="header-left">
-            <button id="profile" class="icon-button" onclick="profileDetails()">
+            <button id="profile" class="icon-button" onclick="toggleProfile(event)">
                 <i class="fas fa-user"></i>
+                <span class="alert-indicator"></span>
             </button>
-            <div id="profileDetail" class="dropdown-content"></div>
+            <div id="profileDetail" class="dropdown-content">
+                <div class="profile-menu">
+                    <button class="menu-item" onclick="showProfileDetails()">
+                        <i class="fas fa-id-card"></i> Profile Details
+                    </button>
+                    <button class="menu-item" onclick="showAlerts()">
+                        <i class="fas fa-bell"></i> Alerts
+                        <span class="alert-count" id="alertCount"></span>
+                    </button>
+                </div>
+                <div id="profileContent" class="profile-content">
+                    <!-- Profile details will be shown here -->
+                </div>
+                <div id="alertsContent" class="alerts-section" style="display: none;">
+                    <div class="alerts-header">
+                        <button class="back-button" onclick="hideAlerts()">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <h3>Health Alerts</h3>
+                    </div>
+                    <div id="alertsList">
+                        <div class="no-alerts">No alerts at this time</div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <h1><i class="fas fa-cow"></i> Cattle Health Monitor</h1>
@@ -22,7 +47,9 @@
         <div class="header-right">
             <button id="optionLogo" class="icon-button" onclick="displayOption()">
                 <i class="fas fa-ellipsis-v"></i>
+                
             </button>
+            <span class="alert-indicator"></span>
             <div id="option" class="dropdown-content"></div>
         </div>
     </header>

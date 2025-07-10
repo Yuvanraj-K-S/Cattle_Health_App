@@ -1,7 +1,37 @@
-let profile = true, options = true;
+let profile = true; // true means closed, false means open
+let options = true;
+let healthAlerts = [];
+let currentView = 'menu'; // 'menu', 'profile', or 'alerts'
+const predictionCache = {};  // cattleId => ["healthy", "at risk", ...]
 
-// Display cattle list on page load
-window.onload = displayList;
+
+// Display cattle list on page load and start health monitoring
+window.onload = () => {
+    displayList();
+    startHealthMonitoring();
+    setupClickOutsideHandler();
+    // Ensure profile dropdown is hidden initially
+    const profileDetail = document.getElementById("profileDetail");
+    profileDetail.style.display = "none";
+};
+
+// Setup click outside handler
+function setupClickOutsideHandler() {
+    document.addEventListener('click', (e) => {
+        const profileButton = document.getElementById('profile');
+        const profileDetail = document.getElementById('profileDetail');
+        const optionButton = document.getElementById('optionLogo');
+        const optionDetail = document.getElementById('option');
+
+        if (!profileButton.contains(e.target) && !profileDetail.contains(e.target)) {
+            hideProfileDropdown();
+        }
+
+        if (!optionButton.contains(e.target) && !optionDetail.contains(e.target)) {
+            hideOptionDropdown();
+        }
+    });
+}
 
 function displayList() {
     const ele = document.getElementById("displayListSpace");
@@ -143,90 +173,94 @@ function displayList() {
 
 // Health analysis functions
 async function analyzeHealth(cattleId) {
-    try {
-        const loading = Swal.fire({
-            title: 'Analyzing Health...',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
+  try {
+    const loading = Swal.fire({
+      title: 'Analyzing Health...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
 
-        // Get all readings
-        const readingsRes = await fetch(`http://localhost:3001/api/cattle/${cattleId}/readings`);
-        if (!readingsRes.ok) {
-            throw new Error('Failed to fetch readings');
-        }
-        const readings = await readingsRes.json();
-        
-        if (!readings || !readings.length) {
-            await loading.close();
-            return Swal.fire('No Data', 'No health readings available for this cattle', 'info');
-        }
-
-        // Analyze each reading
-        const analysis = await Promise.all(
-            readings.map(reading => 
-                fetch('http://localhost:5000/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(reading)
-                })
-                .then(res => res.ok ? res.json() : Promise.reject('Prediction failed'))
-            )
-        );
-
-        await loading.close();
-        
-        // Count results
-        const healthyCount = analysis.filter(a => a && a.status === 'healthy').length;
-        const atRiskCount = analysis.length - healthyCount;
-        
-        // Determine overall status
-        let status, icon, title, color;
-        if (healthyCount > atRiskCount) {
-            status = 'healthy';
-            icon = 'success';
-            title = 'Generally Healthy';
-            color = '#38a169';
-        } else if (atRiskCount > healthyCount) {
-            status = 'at risk';
-            icon = 'error';
-            title = 'Health Risk Detected';
-            color = '#e53e3e';
-        } else {
-            status = 'uncertain';
-            icon = 'warning';
-            title = 'Inconclusive Results';
-            color = '#dd6b20';
-        }
-
-        // Show results
-        return Swal.fire({
-            icon,
-            title,
-            html: `
-                <div class="health-analysis-summary">
-                    <p><strong>Analysis of ${readings.length} readings:</strong></p>
-                    <div class="health-metric">
-                        <span>✅ Healthy Readings:</span>
-                        <span>${healthyCount}</span>
-                    </div>
-                    <div class="health-metric">
-                        <span>⚠️ At-Risk Readings:</span>
-                        <span>${atRiskCount}</span>
-                    </div>
-                    <div class="health-status" style="color: ${color}">
-                        Overall Status: ${status.toUpperCase()}
-                    </div>
-                    ${status !== 'healthy' ? 
-                        '<p><i class="fas fa-exclamation-triangle"></i> Please consider veterinary consultation</p>' : ''}
-                </div>
-            `,
-            confirmButtonColor: color
-        });
-    } catch (error) {
-        console.error('Analysis error:', error);
-        Swal.fire('Error', 'Failed to analyze health data: ' + error, 'error');
+    // Fetch readings
+    const readingsRes = await fetch(`http://localhost:3001/api/cattle/${cattleId}/readings`);
+    if (!readingsRes.ok) throw new Error('Failed to fetch readings');
+    const readings = await readingsRes.json();
+    if (!readings || !readings.length) {
+      await loading.close();
+      return Swal.fire('No Data', 'No health readings available', 'info');
     }
+
+    let predictions = predictionCache[cattleId] || [];
+
+    // First time: Analyze all
+    if (predictions.length === 0) {
+      const batchResults = await Promise.all(
+        readings.map(reading =>
+          fetch('http://localhost:5000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reading)
+          }).then(res => res.json())
+        )
+      );
+      predictions = batchResults.map(r => r.status);
+      predictionCache[cattleId] = predictions; // store in cache
+    } else if (readings.length > predictions.length) {
+      // Only predict new readings
+      const newReadings = readings.slice(predictions.length);
+      const newResults = await Promise.all(
+        newReadings.map(reading =>
+          fetch('http://localhost:5000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reading)
+          }).then(res => res.json())
+        )
+      );
+      const newStatuses = newResults.map(r => r.status);
+      predictionCache[cattleId].push(...newStatuses);
+      predictions = predictionCache[cattleId];
+    }
+
+    // Count stats
+    const total = predictions.length;
+    const healthy = predictions.filter(p => p === "healthy").length;
+    const atRisk = total - healthy;
+    const riskPercent = ((atRisk / total) * 100).toFixed(1);
+    const isAtRisk = atRisk > healthy;
+
+    await loading.close();
+
+    // Add alert if necessary
+    if (isAtRisk) {
+      const cattleRes = await fetch(`http://localhost:3001/api/cattle/${cattleId}`);
+      if (cattleRes.ok) {
+        const cattle = await cattleRes.json();
+        const lastReading = readings[readings.length - 1];
+        addHealthAlert(cattle.tag_id, lastReading);
+      }
+    }
+
+    return Swal.fire({
+      icon: isAtRisk ? 'error' : 'success',
+      title: isAtRisk ? 'Health Risk Detected' : 'Generally Healthy',
+      html: `
+        <div class="health-analysis-summary">
+          <p><strong>Analyzed ${total} readings</strong></p>
+          <div class="health-metric"><span>✅ Healthy:</span> <span>${healthy}</span></div>
+          <div class="health-metric"><span>⚠ At Risk:</span> <span>${atRisk}</span></div>
+          <div class="health-status" style="color:${isAtRisk ? '#e53e3e' : '#38a169'}">
+            Risk Rate: ${riskPercent}%
+          </div>
+        </div>
+      `,
+      confirmButtonColor: isAtRisk ? '#e53e3e' : '#38a169'
+    });
+
+  } catch (error) {
+    Swal.close();
+    console.error('Health analysis error:', error);
+    Swal.fire('Error', 'Failed to analyze health data', 'error');
+  }
 }
 
 // Cattle management functions
@@ -425,4 +459,277 @@ function viewDetails(id) {
             icon: 'info'
         });
     }, 1000);
+}
+
+// Toggle profile dropdown
+function toggleProfile(event) {
+    event.stopPropagation(); // Prevent event from bubbling up
+    const profileDetail = document.getElementById("profileDetail");
+    profile = !profile;
+    
+    if (profile) { // If true (closed), hide the dropdown
+        hideProfileDropdown();
+    } else { // If false (open), show the dropdown
+        showProfileMenu();
+        profileDetail.style.display = "block";
+    }
+}
+
+// Hide profile dropdown
+function hideProfileDropdown() {
+    const profileDetail = document.getElementById("profileDetail");
+    profile = true; // Set to closed state
+    profileDetail.style.display = "none";
+    currentView = 'menu';
+    resetProfileView();
+}
+
+// Hide option dropdown
+function hideOptionDropdown() {
+    const optionDetail = document.getElementById("option");
+    options = true;
+    optionDetail.style.display = "none";
+}
+
+// Show profile menu
+function showProfileMenu() {
+    currentView = 'menu';
+    resetProfileView();
+    document.querySelector('.profile-menu').style.display = 'block';
+}
+
+// Reset profile view
+function resetProfileView() {
+    document.querySelector('.profile-menu').style.display = 'block';
+    document.getElementById('profileContent').style.display = 'none';
+    document.getElementById('alertsContent').style.display = 'none';
+}
+
+// Show profile details
+function showProfileDetails() {
+    currentView = 'profile';
+    document.querySelector('.profile-menu').style.display = 'none';
+    const profileContent = document.getElementById('profileContent');
+    profileContent.style.display = 'block';
+    profileContent.innerHTML = `
+        <div class="profile-details">
+            <h3>Profile Details</h3>
+            <p><strong>Role:</strong> Cattle Manager</p>
+            <p><strong>Access Level:</strong> Administrator</p>
+            <p><strong>Last Login:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+    `;
+}
+
+// Show alerts
+function showAlerts() {
+    currentView = 'alerts';
+    document.querySelector('.profile-menu').style.display = 'none';
+    document.getElementById('alertsContent').style.display = 'block';
+    displayAlerts();
+}
+
+// Hide alerts
+function hideAlerts() {
+    showProfileMenu();
+}
+
+// Display alerts in the alerts section
+function displayAlerts() {
+    const alertsList = document.getElementById("alertsList");
+    if (healthAlerts.length === 0) {
+        alertsList.innerHTML = '<div class="no-alerts">No alerts at this time</div>';
+        return;
+    }
+
+    alertsList.innerHTML = healthAlerts
+        .map((alert, index) => `
+            <div class="alert-item ${alert.read ? 'read' : ''}" onclick="viewAlertDetails(${index})">
+                <div class="alert-header">
+                    <span class="alert-title">Cattle ${alert.tagId}</span>
+                    <span class="alert-time">${new Date(alert.time).toLocaleTimeString()}</span>
+                </div>
+                <div class="alert-message">${alert.message}</div>
+                <span class="alert-status risk">At Risk</span>
+            </div>
+        `)
+        .join('');
+}
+
+// View alert details
+async function viewAlertDetails(index) {
+    const alert = healthAlerts[index];
+    if (!alert) return;
+
+    // Mark alert as read
+    alert.read = true;
+    updateAlertIndicators();
+    displayAlerts();
+
+    // Show detailed analysis
+    try {
+        const loading = Swal.fire({
+            title: 'Loading Analysis...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        // Fetch latest readings for the cattle
+        const cattleRes = await fetch(`http://localhost:3001/api/cattle`);
+        const allCattle = await cattleRes.json();
+        const cattle = allCattle.find(c => c.tag_id === alert.tagId);
+        
+        if (!cattle) {
+            await loading.close();
+            return Swal.fire('Error', 'Cattle not found', 'error');
+        }
+
+        const readingsRes = await fetch(`http://localhost:3001/api/cattle/${cattle._id}/readings`);
+        const readings = await readingsRes.json();
+        
+        if (!readings || !readings.length) {
+            await loading.close();
+            return Swal.fire('No Data', 'No health readings available', 'info');
+        }
+
+        // Get latest reading analysis
+        const latestReading = readings[readings.length - 1];
+        const analysisRes = await fetch('http://localhost:5000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(latestReading)
+        });
+        
+        const analysis = await analysisRes.json();
+        await loading.close();
+
+        // Show detailed alert with analysis
+        Swal.fire({
+            title: `Health Alert - Cattle ${alert.tagId}`,
+            html: `
+                <div class="health-analysis-summary">
+                    <div class="health-metric">
+                        <i class="fas fa-thermometer-half"></i>
+                        <span>Temperature: ${latestReading.body_temperature}°C</span>
+                    </div>
+                    <div class="health-metric">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Heart Rate: ${latestReading.heart_rate} bpm</span>
+                    </div>
+                    <div class="health-metric">
+                        <i class="fas fa-moon"></i>
+                        <span>Sleep Duration: ${latestReading.sleeping_duration}h</span>
+                    </div>
+                    <div class="health-metric">
+                        <i class="fas fa-bed"></i>
+                        <span>Lying Duration: ${latestReading.lying_down_duration}h</span>
+                    </div>
+                    <div class="health-status risk">
+                        Risk Probability: ${(analysis.probability * 100).toFixed(1)}%
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            confirmButtonColor: '#dd6b20'
+        });
+    } catch (error) {
+        console.error('Error loading alert details:', error);
+        Swal.fire('Error', 'Failed to load alert details', 'error');
+    }
+}
+
+// Update alert indicators
+function updateAlertIndicators() {
+    const unreadAlerts = healthAlerts.filter(alert => !alert.read).length;
+    const hasAlerts = unreadAlerts > 0;
+    
+    // Update alert count
+    const alertCount = document.getElementById('alertCount');
+    if (alertCount) {
+        alertCount.textContent = unreadAlerts || '';
+        alertCount.classList.toggle('has-alerts', hasAlerts);
+    }
+    
+    // Update alert indicators
+    document.getElementById("profile").classList.toggle("has-alerts", hasAlerts);
+    document.getElementById("optionLogo").classList.toggle("has-alerts", hasAlerts);
+}
+
+// Add a new health alert
+function addHealthAlert(tagId, health) {
+    const newAlert = {
+        tagId,
+        time: new Date(),
+        message: `Health risk detected - Temperature: ${health.body_temperature}°C, Heart Rate: ${health.heart_rate} bpm`,
+        read: false
+    };
+
+    // Add alert only if it's not a duplicate (same cattle within last 5 minutes)
+    const isDuplicate = healthAlerts.some(alert => 
+        alert.tagId === tagId && 
+        (new Date() - new Date(alert.time)) < 300000 // 5 minutes
+    );
+
+    if (!isDuplicate) {
+        healthAlerts.unshift(newAlert);
+        // Keep only last 10 alerts
+        if (healthAlerts.length > 10) {
+            healthAlerts.pop();
+        }
+        updateAlertIndicators();
+        // If alerts are being viewed, update the display
+        if (currentView === 'alerts') {
+            displayAlerts();
+        }
+    }
+}
+
+// Start automatic health monitoring
+function startHealthMonitoring() {
+    checkAllCattleHealth();
+    setInterval(checkAllCattleHealth, 30000); // Check every 30 seconds
+}
+
+// Check health for all cattle
+async function checkAllCattleHealth() {
+    try {
+        const response = await fetch("http://localhost:3001/api/cattle");
+        if (!response.ok) throw new Error('Failed to fetch cattle');
+        
+        const cattle = await response.json();
+        for (const item of cattle) {
+            const health = await analyzeCattleHealth(item._id);
+            if (health && health.status === 'at risk') {
+                addHealthAlert(item.tag_id, health);
+            }
+        }
+    } catch (error) {
+        console.error('Health monitoring error:', error);
+    }
+}
+
+// Analyze health for a single cattle
+async function analyzeCattleHealth(cattleId) {
+    try {
+        const readingsRes = await fetch(`http://localhost:3001/api/cattle/${cattleId}/readings`);
+        if (!readingsRes.ok) throw new Error('Failed to fetch readings');
+        
+        const readings = await readingsRes.json();
+        if (!readings || !readings.length) return null;
+
+        // Get latest reading
+        const latestReading = readings[readings.length - 1];
+        
+        const predictionRes = await fetch('http://localhost:5000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(latestReading)
+        });
+        
+        if (!predictionRes.ok) throw new Error('Prediction failed');
+        return await predictionRes.json();
+    } catch (error) {
+        console.error('Health analysis error:', error);
+        return null;
+    }
 }

@@ -189,6 +189,19 @@ app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error', details: err.message });
 });
+// Add this new route for limited readings
+app.get('/api/cattle/:id/readings', asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit) || 0;
+    const cattle = await Cattle.findById(req.params.id);
+    if (!cattle) return res.status(404).json({ error: 'Cattle not found' });
+    
+    const readings = limit > 0 
+        ? cattle.health_readings.slice(0, limit).reverse() // Latest first
+        : cattle.health_readings;
+    
+    res.json(readings);
+}));
 
+// Existing routes remain the same
 const PORT = 3001;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

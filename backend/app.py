@@ -24,8 +24,14 @@ def predict():
         ]
         
         # Scale and predict
-        input_data = np.array(features).reshape(1, -1)
-        input_scaled = scaler.transform(input_data)
+        import pandas as pd
+
+        # Match column names with what was used during training
+        columns = ["body_temperature", "heart_rate", "sleeping_duration", "lying_down_duration"]
+        df_input = pd.DataFrame([features], columns=columns)
+
+        input_scaled = scaler.transform(df_input)
+        # input_scaled = scaler.transform(features)
         prediction = model.predict(input_scaled)
         probability = model.predict_proba(input_scaled)[0]
         

@@ -69,7 +69,7 @@ class SimulationManager {
 
   async initialize() {
     await this._updateCattleList();
-    setInterval(() => this._updateAndSimulate(), 5000); // Check every 5 seconds
+    setInterval(() => this._updateAndSimulate(), 60000); // Check every 5 seconds
   }
 
   async _updateCattleList() {
