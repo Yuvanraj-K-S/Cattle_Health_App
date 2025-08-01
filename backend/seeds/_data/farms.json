@@ -1,0 +1,76 @@
+[
+  {
+    "name": "Green Valley Farm",
+    "description": "A large dairy farm specializing in organic milk production",
+    "location": {
+      "address": "123 Farm Road",
+      "city": "Green Valley",
+      "state": "California",
+      "country": "USA",
+      "zipCode": "90210",
+      "coordinates": {
+        "lat": 34.0522,
+        "lng": -118.2437
+      }
+    },
+    "contact": {
+      "email": "info@greenvalleyfarm.com",
+      "phone": "+15551234567",
+      "website": "https://greenvalleyfarm.com"
+    },
+    "subscription": {
+      "plan": "premium",
+      "status": "active",
+      "startDate": "2023-01-01T00:00:00.000Z",
+      "endDate": "2024-12-31T23:59:59.999Z"
+    },
+    "settings": {
+      "units": "metric",
+      "timezone": "America/Los_Angeles",
+      "notifications": {
+        "email": true,
+        "sms": true,
+        "push": true
+      }
+    },
+    "status": "active",
+    "createdAt": "2023-01-01T00:00:00.000Z"
+  },
+  {
+    "name": "Sunny Acres Ranch",
+    "description": "Family-owned beef cattle ranch with sustainable practices",
+    "location": {
+      "address": "456 Ranch Road",
+      "city": "Sunny Acres",
+      "state": "Texas",
+      "country": "USA",
+      "zipCode": "73301",
+      "coordinates": {
+        "lat": 30.2672,
+        "lng": -97.7431
+      }
+    },
+    "contact": {
+      "email": "contact@sunnyacres.com",
+      "phone": "+15557654321",
+      "website": "https://sunnyacresranch.com"
+    },
+    "subscription": {
+      "plan": "standard",
+      "status": "active",
+      "startDate": "2023-02-15T00:00:00.000Z",
+      "endDate": "2023-12-31T23:59:59.999Z"
+    },
+    "settings": {
+      "units": "imperial",
+      "timezone": "America/Chicago",
+      "notifications": {
+        "email": true,
+        "sms": false,
+        "push": true
+      }
+    },
+    "status": "active",
+    "createdAt": "2023-02-15T00:00:00.000Z"
+  }
+]

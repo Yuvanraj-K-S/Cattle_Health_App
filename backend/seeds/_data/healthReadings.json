@@ -1,0 +1,205 @@
+[
+  {
+    "cattle": "64c1f5a5e4a8f6b8d4f3e2b1",
+    "recordedBy": "64c1f5a5e4a8f6b8d4f3e2a3",
+    "recordedAt": "2023-06-20T14:30:00.000Z",
+    "bodyTemperature": {
+      "value": 38.5,
+      "unit": "celsius"
+    },
+    "heartRate": {
+      "value": 68,
+      "unit": "bpm"
+    },
+    "respiratoryRate": {
+      "value": 26,
+      "unit": "breaths/min"
+    },
+    "rumination": {
+      "value": 480,
+      "unit": "min/day"
+    },
+    "activityLevel": {
+      "value": 45,
+      "unit": "%"
+    },
+    "milkProduction": {
+      "value": 28.5,
+      "unit": "liters"
+    },
+    "milkQuality": {
+      "fatContent": 3.8,
+      "proteinContent": 3.2,
+      "somaticCellCount": 120000,
+      "unit": "cells/ml"
+    },
+    "weight": {
+      "value": 650,
+      "unit": "kg"
+    },
+    "bodyConditionScore": 3.5,
+    "locomotionScore": 2,
+    "rumenFillScore": 4,
+    "fecalConsistencyScore": 3,
+    "reproductiveStatus": {
+      "status": "pregnant",
+      "daysPregnant": 180,
+      "heatDetectionScore": 0,
+      "pregnancyCheck": {
+        "date": "2023-02-15T00:00:00.000Z",
+        "result": "positive",
+        "method": "ultrasound"
+      }
+    },
+    "healthStatus": "healthy",
+    "notes": "Normal vitals. Good appetite and rumination. No signs of distress.",
+    "createdAt": "2023-06-20T14:30:00.000Z"
+  },
+  {
+    "cattle": "64c1f5a5e4a8f6b8d4f3e2b2",
+    "recordedBy": "64c1f5a5e4a8f6b8d4f3e2a3",
+    "recordedAt": "2023-06-19T10:15:00.000Z",
+    "bodyTemperature": {
+      "value": 39.2,
+      "unit": "celsius"
+    },
+    "heartRate": {
+      "value": 75,
+      "unit": "bpm"
+    },
+    "respiratoryRate": {
+      "value": 32,
+      "unit": "breaths/min"
+    },
+    "rumination": {
+      "value": 320,
+      "unit": "min/day"
+    },
+    "activityLevel": {
+      "value": 30,
+      "unit": "%"
+    },
+    "milkProduction": {
+      "value": 22.3,
+      "unit": "liters"
+    },
+    "milkQuality": {
+      "fatContent": 4.1,
+      "proteinContent": 3.4,
+      "somaticCellCount": 280000,
+      "unit": "cells/ml"
+    },
+    "weight": {
+      "value": 450,
+      "unit": "kg"
+    },
+    "bodyConditionScore": 3.0,
+    "locomotionScore": 3,
+    "rumenFillScore": 3,
+    "fecalConsistencyScore": 2,
+    "reproductiveStatus": {
+      "status": "open",
+      "daysInMilk": 135,
+      "heatDetectionScore": 0,
+      "lastCalvingDate": "2023-02-05T00:00:00.000Z"
+    },
+    "healthStatus": "under_observation",
+    "diagnosis": "Mild lameness - right hind leg",
+    "treatment": "Anti-inflammatory medication administered. Rest recommended.",
+    "medications": [
+      {
+        "name": "Meloxicam",
+        "dosage": "0.5 mg/kg",
+        "frequency": "Once daily",
+        "startDate": "2023-06-19T10:15:00.000Z",
+        "endDate": "2023-06-26T10:15:00.000Z"
+      }
+    ],
+    "nextCheckup": "2023-06-22T10:00:00.000Z",
+    "notes": "Slight lameness observed in right hind leg. Appetite slightly reduced. Monitoring required.",
+    "createdAt": "2023-06-19T10:15:00.000Z"
+  },
+  {
+    "cattle": "64c1f5a5e4a8f6b8d4f3e2b3",
+    "recordedBy": "64c1f5a5e4a8f6b8d4f3e2a6",
+    "recordedAt": "2023-06-18T09:45:00.000Z",
+    "bodyTemperature": {
+      "value": 38.7,
+      "unit": "celsius"
+    },
+    "heartRate": {
+      "value": 60,
+      "unit": "bpm"
+    },
+    "respiratoryRate": {
+      "value": 22,
+      "unit": "breaths/min"
+    },
+    "rumination": {
+      "value": 520,
+      "unit": "min/day"
+    },
+    "activityLevel": {
+      "value": 50,
+      "unit": "%"
+    },
+    "weight": {
+      "value": 800,
+      "unit": "kg"
+    },
+    "bodyConditionScore": 4.0,
+    "locomotionScore": 1,
+    "rumenFillScore": 5,
+    "fecalConsistencyScore": 3,
+    "reproductiveStatus": {
+      "status": "bull",
+      "libidoScore": 4,
+      "semenQuality": "excellent"
+    },
+    "healthStatus": "healthy",
+    "notes": "Excellent condition. Active and alert. Good appetite and rumination.",
+    "createdAt": "2023-06-18T09:45:00.000Z"
+  },
+  {
+    "cattle": "64c1f5a5e4a8f6b8d4f3e2b4",
+    "recordedBy": "64c1f5a5e4a8f6b8d4f3e2a6",
+    "recordedAt": "2023-06-17T11:20:00.000Z",
+    "bodyTemperature": {
+      "value": 38.9,
+      "unit": "celsius"
+    },
+    "heartRate": {
+      "value": 65,
+      "unit": "bpm"
+    },
+    "respiratoryRate": {
+      "value": 24,
+      "unit": "breaths/min"
+    },
+    "rumination": {
+      "value": 490,
+      "unit": "min/day"
+    },
+    "activityLevel": {
+      "value": 48,
+      "unit": "%"
+    },
+    "weight": {
+      "value": 380,
+      "unit": "kg"
+    },
+    "bodyConditionScore": 3.2,
+    "locomotionScore": 1,
+    "rumenFillScore": 4,
+    "fecalConsistencyScore": 3,
+    "reproductiveStatus": {
+      "status": "heifer",
+      "ageAtFirstHeat": 14,
+      "heatDetectionScore": 0,
+      "breedingEligibility": "eligible"
+    },
+    "healthStatus": "healthy",
+    "notes": "Growing well. Good confirmation. No health concerns.",
+    "createdAt": "2023-06-17T11:20:00.000Z"
+  }
+]

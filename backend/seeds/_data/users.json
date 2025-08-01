@@ -1,0 +1,104 @@
+[
+  {
+    "firstName": "Admin",
+    "lastName": "User",
+    "email": "admin@cattlehealth.com",
+    "password": "$2a$10$D4dQO7r6Xw5nX5K5X5X5Xe",
+    "role": "super_admin",
+    "phone": "+15551234567",
+    "isEmailVerified": true,
+    "farms": [],
+    "status": "active",
+    "createdAt": "2023-01-01T00:00:00.000Z"
+  },
+  {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@greenvalley.com",
+    "password": "$2a$10$D4dQO7r6Xw5nX5K5X5X5Xe",
+    "role": "farm_owner",
+    "phone": "+15552345678",
+    "isEmailVerified": true,
+    "farms": [
+      {
+        "farm": "64c1f5a5e4a8f6b8d4f3e2a1",
+        "role": "owner",
+        "joinedAt": "2023-01-01T00:00:00.000Z"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2023-01-02T00:00:00.000Z"
+  },
+  {
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "email": "jane.smith@greenvalley.com",
+    "password": "$2a$10$D4dQO7r6Xw5nX5K5X5X5Xe",
+    "role": "veterinarian",
+    "phone": "+15553456789",
+    "isEmailVerified": true,
+    "farms": [
+      {
+        "farm": "64c1f5a5e4a8f6b8d4f3e2a1",
+        "role": "veterinarian",
+        "joinedAt": "2023-01-03T00:00:00.000Z"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2023-01-03T00:00:00.000Z"
+  },
+  {
+    "firstName": "Mike",
+    "lastName": "Johnson",
+    "email": "mike.johnson@greenvalley.com",
+    "password": "$2a$10$D4dQO7r6Xw5nX5K5X5X5Xe",
+    "role": "farm_manager",
+    "phone": "+15554567890",
+    "isEmailVerified": true,
+    "farms": [
+      {
+        "farm": "64c1f5a5e4a8f6b8d4f3e2a1",
+        "role": "manager",
+        "joinedAt": "2023-01-04T00:00:00.000Z"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2023-01-04T00:00:00.000Z"
+  },
+  {
+    "firstName": "Sarah",
+    "lastName": "Williams",
+    "email": "sarah@sunnyacres.com",
+    "password": "$2a$10$D4dQO7r6Xw5nX5K5X5X5Xe",
+    "role": "farm_owner",
+    "phone": "+15555678901",
+    "isEmailVerified": true,
+    "farms": [
+      {
+        "farm": "64c1f5a5e4a8f6b8d4f3e2a2",
+        "role": "owner",
+        "joinedAt": "2023-02-15T00:00:00.000Z"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2023-02-15T00:00:00.000Z"
+  },
+  {
+    "firstName": "David",
+    "lastName": "Brown",
+    "email": "david@sunnyacres.com",
+    "password": "$2a$10$D4dQO7r6Xw5nX5K5X5X5Xe",
+    "role": "worker",
+    "phone": "+15556789012",
+    "isEmailVerified": true,
+    "farms": [
+      {
+        "farm": "64c1f5a5e4a8f6b8d4f3e2a2",
+        "role": "worker",
+        "joinedAt": "2023-02-16T00:00:00.000Z"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2023-02-16T00:00:00.000Z"
+  }
+]

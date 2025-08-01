@@ -1,0 +1,73 @@
+{
+  "root": true,
+  "env": {
+    "node": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript",
+    "plugin:prettier/recommended",
+    "plugin:security/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "import",
+    "prettier",
+    "security"
+  ],
+  "rules": {
+    "prettier/prettier": "error",
+    "no-console": "warn",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/explicit-function-return-type": ["error", { "allowExpressions": true }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "security/detect-object-injection": "off",
+    "import/order": ["error", {
+      "groups": [
+        "builtin",
+        "external",
+        "internal",
+        "parent",
+        "sibling",
+        "index"
+      ],
+      "newlines-between": "always",
+      "alphabetize": {
+        "order": "asc",
+        "caseInsensitive": true
+      }
+    }],
+    "import/no-cycle": "error",
+    "import/no-unresolved": "error",
+    "import/extensions": ["error", "ignorePackages", {
+      "ts": "never",
+      "tsx": "never",
+      "js": "never",
+      "jsx": "never"
+    }]
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".ts", ".js"],
+        "moduleDirectory": ["node_modules", "src/"]
+      },
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**", "**/*.test.ts"]
+}

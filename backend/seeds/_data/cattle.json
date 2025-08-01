@@ -1,0 +1,128 @@
+[
+  {
+    "tagId": "GV-001",
+    "name": "Daisy",
+    "breed": "Holstein Friesian",
+    "gender": "female",
+    "dateOfBirth": "2020-03-15T00:00:00.000Z",
+    "farm": "64c1f5a5e4a8f6b8d4f3e2a1",
+    "owner": "64c1f5a5e4a8f6b8d4f3e2a2",
+    "motherTag": "GV-000",
+    "fatherTag": "GV-BULL-001",
+    "purchaseDate": "2020-05-20T00:00:00.000Z",
+    "purchaseFrom": "Local Breeder",
+    "weight": {
+      "value": 650,
+      "unit": "kg",
+      "measuredAt": "2023-06-15T00:00:00.000Z"
+    },
+    "height": {
+      "value": 145,
+      "unit": "cm",
+      "measuredAt": "2023-06-15T00:00:00.000Z"
+    },
+    "status": "active",
+    "lastHealthCheck": "2023-06-20T14:30:00.000Z",
+    "healthStatus": "healthy",
+    "location": "North Pasture",
+    "group": "Milking Cows",
+    "notes": "Produces high-quality milk. Calm temperament.",
+    "isPregnant": true,
+    "pregnancyDetails": {
+      "dueDate": "2023-09-10T00:00:00.000Z",
+      "sireTag": "GV-BULL-002",
+      "pregnancyCheckDate": "2023-02-15T00:00:00.000Z",
+      "pregnancyStatus": "confirmed"
+    },
+    "lastBreedingDate": "2022-12-10T00:00:00.000Z",
+    "lastCalvingDate": "2022-01-20T00:00:00.000Z",
+    "createdAt": "2020-05-20T00:00:00.000Z"
+  },
+  {
+    "tagId": "GV-002",
+    "name": "Bella",
+    "breed": "Jersey",
+    "gender": "female",
+    "dateOfBirth": "2019-07-22T00:00:00.000Z",
+    "farm": "64c1f5a5e4a8f6b8d4f3e2a1",
+    "owner": "64c1f5a5e4a8f6b8d4f3e2a2",
+    "motherTag": "GV-100",
+    "fatherTag": "GV-BULL-003",
+    "purchaseDate": "2019-09-10T00:00:00.000Z",
+    "weight": {
+      "value": 450,
+      "unit": "kg",
+      "measuredAt": "2023-06-18T00:00:00.000Z"
+    },
+    "height": {
+      "value": 130,
+      "unit": "cm",
+      "measuredAt": "2023-06-18T00:00:00.000Z"
+    },
+    "status": "active",
+    "lastHealthCheck": "2023-06-19T10:15:00.000Z",
+    "healthStatus": "under_observation",
+    "location": "Milking Parlor",
+    "group": "Milking Cows",
+    "notes": "Slight lameness observed. Being treated.",
+    "isPregnant": false,
+    "lastCalvingDate": "2023-02-05T00:00:00.000Z",
+    "createdAt": "2019-09-10T00:00:00.000Z"
+  },
+  {
+    "tagId": "SA-001",
+    "name": "Bruno",
+    "breed": "Angus",
+    "gender": "male",
+    "dateOfBirth": "2021-01-10T00:00:00.000Z",
+    "farm": "64c1f5a5e4a8f6b8d4f3e2a2",
+    "owner": "64c1f5a5e4a8f6b8d4f3e2a5",
+    "motherTag": "SA-100",
+    "fatherTag": "SA-BULL-001",
+    "weight": {
+      "value": 800,
+      "unit": "kg",
+      "measuredAt": "2023-06-17T00:00:00.000Z"
+    },
+    "height": {
+      "value": 150,
+      "unit": "cm",
+      "measuredAt": "2023-06-17T00:00:00.000Z"
+    },
+    "status": "active",
+    "lastHealthCheck": "2023-06-18T09:45:00.000Z",
+    "healthStatus": "healthy",
+    "location": "South Pasture",
+    "group": "Breeding Bulls",
+    "notes": "Excellent temperament. Good breeding bull.",
+    "createdAt": "2021-01-10T00:00:00.000Z"
+  },
+  {
+    "tagId": "SA-002",
+    "name": "Luna",
+    "breed": "Hereford",
+    "gender": "female",
+    "dateOfBirth": "2022-03-05T00:00:00.000Z",
+    "farm": "64c1f5a5e4a8f6b8d4f3e2a2",
+    "owner": "64c1f5a5e4a8f6b8d4f3e2a5",
+    "motherTag": "SA-101",
+    "fatherTag": "SA-BULL-002",
+    "weight": {
+      "value": 380,
+      "unit": "kg",
+      "measuredAt": "2023-06-16T00:00:00.000Z"
+    },
+    "height": {
+      "value": 125,
+      "unit": "cm",
+      "measuredAt": "2023-06-16T00:00:00.000Z"
+    },
+    "status": "active",
+    "lastHealthCheck": "2023-06-17T11:20:00.000Z",
+    "healthStatus": "healthy",
+    "location": "East Pasture",
+    "group": "Heifers",
+    "notes": "Growing well. Good confirmation.",
+    "createdAt": "2022-03-05T00:00:00.000Z"
+  }
+]
