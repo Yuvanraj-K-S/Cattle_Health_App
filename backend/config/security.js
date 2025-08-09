@@ -1,4 +1,6 @@
 const { NODE_ENV } = process.env;
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
 
 // CORS configuration
 const corsOptions = {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { login, clearError } from '../../features/auth/authSlice';
 import {
@@ -12,31 +12,92 @@ import {
   Link,
   Alert,
   CircularProgress,
+  AlertTitle,
 } from '@mui/material';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [searchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const { isAuthenticated, loading, error } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
+  
+  // Check for error query parameter
+  const errorType = searchParams.get('error');
+  const redirectPath = searchParams.get('redirect');
+  
+  // State for showing error alerts
+  const [showForbiddenAlert, setShowForbiddenAlert] = useState(errorType === 'forbidden');
+  const [showSessionExpired, setShowSessionExpired] = useState(errorType === 'session_expired');
 
+  // Clear any previous errors and handle query parameters when component mounts
   useEffect(() => {
-    // Clear any previous errors when component mounts
     dispatch(clearError());
-  }, [dispatch]);
+    
+    // If there's a redirect parameter, save it to session storage
+    if (redirectPath) {
+      sessionStorage.setItem('redirectAfterLogin', redirectPath);
+    }
+    
+    // Clear URL parameters to prevent showing alerts on refresh
+    if (window.location.search) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [dispatch, redirectPath]);
 
+  // Redirect if already authenticated
   useEffect(() => {
-    // Redirect if already authenticated
     if (isAuthenticated) {
-      navigate('/dashboard');
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectTo);
     }
   }, [isAuthenticated, navigate]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error for the field being edited
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+    
+    setFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      dispatch(login({ email, password }));
+    if (validateForm()) {
+      dispatch(login({ 
+        email: formData.email, 
+        password: formData.password 
+      }));
     }
   };
 
@@ -55,8 +116,37 @@ const LoginPage: React.FC = () => {
             Sign in to Cattle Health
           </Typography>
           
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+          {/* Forbidden Alert */}
+          {showForbiddenAlert && (
+            <Alert 
+              severity="warning" 
+              sx={{ mb: 2 }}
+              onClose={() => setShowForbiddenAlert(false)}
+            >
+              <AlertTitle>Access Denied</AlertTitle>
+              You don't have permission to access that page. Please log in with an account that has the required permissions.
+            </Alert>
+          )}
+          
+          {/* Session Expired Alert */}
+          {showSessionExpired && (
+            <Alert 
+              severity="info" 
+              sx={{ mb: 2 }}
+              onClose={() => setShowSessionExpired(false)}
+            >
+              <AlertTitle>Session Expired</AlertTitle>
+              Your session has expired. Please log in again to continue.
+            </Alert>
+          )}
+          
+          {/* API Error Alert */}
+          {error && !showForbiddenAlert && !showSessionExpired && (
+            <Alert 
+              severity="error" 
+              sx={{ mb: 2 }}
+              onClose={() => dispatch(clearError())}
+            >
               {error}
             </Alert>
           )}
@@ -71,8 +161,10 @@ const LoginPage: React.FC = () => {
               name="email"
               autoComplete="email"
               autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleChange}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
               disabled={loading}
             />
             <TextField
@@ -84,8 +176,10 @@ const LoginPage: React.FC = () => {
               type="password"
               id="password"
               autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
+              error={!!formErrors.password}
+              helperText={formErrors.password}
               disabled={loading}
             />
             <Button

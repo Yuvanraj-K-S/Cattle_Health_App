@@ -24,7 +24,7 @@ router
   .route('/:id')
   .get(
     authorize('super_admin', 'owner', 'manager', 'veterinarian', 'worker', 'viewer'),
-    cattleController.getCattleById
+    cattleController.getSingleCattle
   )
   .put(
     authorize('super_admin', 'owner', 'manager', 'veterinarian'),

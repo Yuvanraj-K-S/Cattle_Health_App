@@ -19,25 +19,25 @@ router.use(protect);
 // Base route for farm operations
 router
   .route('/')
-  .get(authorize('super_admin', 'owner', 'manager', 'veterinarian', 'worker', 'viewer'), getFarms) // Get all farms for the current user
-  .post(authorize('super_admin', 'owner'), createFarm); // Create a new farm
+  .get(authorize('farm_owner'), getFarms) // Get all farms for the current user
+  .post(authorize('farm_owner'), createFarm); // Create a new farm
 
 // Routes for a specific farm
 router
   .route('/:farmId')
-  .get(authorize('super_admin', 'owner', 'manager', 'veterinarian', 'worker', 'viewer'), getFarm) // Get farm details
-  .put(authorize('super_admin', 'owner', 'manager'), updateFarm) // Update farm details
-  .delete(authorize('super_admin', 'owner'), deleteFarm); // Delete a farm
+  .get(authorize('farm_owner'), getFarm) // Get farm details
+  .put(authorize('farm_owner'), updateFarm) // Update farm details
+  .delete(authorize('farm_owner'), deleteFarm); // Delete a farm
 
 // Farm members management
 router
   .route('/:farmId/members')
-  .get(authorize('super_admin', 'owner', 'manager'), getFarmMembers) // Get all farm members
-  .post(authorize('super_admin', 'owner', 'manager'), addFarmMember); // Add a member to the farm
+  .get(authorize('farm_owner'), getFarmMembers) // Get all farm members
+  .post(authorize('farm_owner'), addFarmMember); // Add a member to the farm
 
 router
   .route('/:farmId/members/:userId')
-  .put(authorize('super_admin', 'owner', 'manager'), updateFarmMember) // Update farm member role
-  .delete(authorize('super_admin', 'owner'), removeFarmMember); // Remove member from farm
+  .put(authorize('farm_owner'), updateFarmMember) // Update farm member role
+  .delete(authorize('farm_owner'), removeFarmMember); // Remove member from farm
 
 module.exports = router;

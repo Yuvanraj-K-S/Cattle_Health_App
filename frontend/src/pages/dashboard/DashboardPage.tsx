@@ -12,11 +12,14 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { loadUser } from '../../features/auth/authSlice';
+import { fetchCattle, getCattleCount } from '../../features/cattle/cattleSlice';
 
 const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading } = useAppSelector((state) => state.auth);
+  const cattleCount = useAppSelector(getCattleCount);
+  const cattleStatus = useAppSelector((state) => state.cattle.status);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -26,8 +29,12 @@ const DashboardPage: React.FC = () => {
       if (!user) {
         dispatch(loadUser());
       }
+      // Load cattle data
+      if (cattleStatus === 'idle') {
+        dispatch(fetchCattle());
+      }
     }
-  }, [isAuthenticated, navigate, dispatch, user]);
+  }, [isAuthenticated, navigate, dispatch, user, cattleStatus]);
 
   if (loading || !user) {
     return (
@@ -55,16 +62,23 @@ const DashboardPage: React.FC = () => {
               <Typography color="text.secondary" gutterBottom>
                 Total Cattle
               </Typography>
-              <Typography variant="h5" component="div">
-                0
-              </Typography>
+              <Box display="flex" alignItems="center" minHeight={36}>
+                {cattleStatus === 'loading' ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  <Typography variant="h5" component="div">
+                    {cattleCount}
+                  </Typography>
+                )}
+              </Box>
               <Button 
                 size="small" 
                 color="primary"
                 onClick={() => navigate('/cattle')}
                 sx={{ mt: 1 }}
+                disabled={cattleCount === 0}
               >
-                View All
+                {cattleCount > 0 ? 'View All' : 'No Cattle'}
               </Button>
             </CardContent>
           </Card>

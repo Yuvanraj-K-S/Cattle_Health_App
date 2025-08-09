@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import axios from 'axios';
 import { store } from './store/store';
 import './index.css';
 import App from './App';
@@ -29,9 +30,6 @@ const theme = createTheme({
     },
   },
 });
-
-// Set up axios defaults
-import axios from 'axios';
 
 // Add a request interceptor to include the auth token in requests
 axios.interceptors.request.use(

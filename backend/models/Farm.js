@@ -8,6 +8,48 @@ const farmSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Farm name cannot exceed 100 characters']
   },
+  
+  // Owner and Users
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Farm must have an owner']
+  },
+  
+  // Users with access to this farm
+  users: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    role: {
+      type: String,
+      enum: ['owner', 'manager', 'veterinarian', 'worker', 'viewer'],
+      required: true
+    },
+    addedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    lastAccess: Date
+  }],
+  
+  // Farm Type
+  type: {
+    type: String,
+    enum: ['dairy', 'beef', 'mixed', 'other'],
+    default: 'dairy'
+  },
   description: {
     type: String,
     maxlength: [500, 'Description cannot exceed 500 characters']
@@ -156,13 +198,72 @@ farmSchema.index({ 'address.coordinates': '2dsphere' });
 
 // Cascade delete all associated cattle when a farm is deleted
 farmSchema.pre('remove', async function(next) {
-  await this.model('Cattle').deleteMany({ farm: this._id });
+  // Only delete cattle if they belong to this farm
+  await this.model('Cattle').deleteMany({ 'farm': this._id });
+  
   // Remove farm reference from users
   await this.model('User').updateMany(
     { 'farms.farm': this._id },
     { $pull: { farms: { farm: this._id } } }
   );
+  
+  // TODO: Add cleanup for any other related data
+  
   next();
 });
+
+// Add a user to the farm
+farmSchema.methods.addUser = async function(userId, role, addedBy) {
+  // Check if user is already added
+  const userExists = this.users.some(user => user.user.toString() === userId.toString());
+  
+  if (userExists) {
+    throw new Error('User already has access to this farm');
+  }
+  
+  this.users.push({
+    user: userId,
+    role,
+    addedBy,
+    addedAt: Date.now(),
+    isActive: true
+  });
+  
+  return this.save();
+};
+
+// Remove a user from the farm
+farmSchema.methods.removeUser = async function(userId) {
+  const userIndex = this.users.findIndex(user => user.user.toString() === userId.toString());
+  
+  if (userIndex === -1) {
+    throw new Error('User not found in this farm');
+  }
+  
+  // Don't remove the owner
+  if (this.owner.toString() === userId.toString()) {
+    throw new Error('Cannot remove the farm owner');
+  }
+  
+  this.users.splice(userIndex, 1);
+  return this.save();
+};
+
+// Update user role in the farm
+farmSchema.methods.updateUserRole = async function(userId, newRole) {
+  const user = this.users.find(user => user.user.toString() === userId.toString());
+  
+  if (!user) {
+    throw new Error('User not found in this farm');
+  }
+  
+  // Don't allow changing owner role this way
+  if (this.owner.toString() === userId.toString()) {
+    throw new Error('Cannot change role of the farm owner');
+  }
+  
+  user.role = newRole;
+  return this.save();
+};
 
 module.exports = mongoose.model('Farm', farmSchema);

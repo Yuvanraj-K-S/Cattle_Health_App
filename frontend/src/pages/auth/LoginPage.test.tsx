@@ -1,14 +1,25 @@
 import React from 'react';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { server } from '../../test/server';
 import { render } from '../../test/test-utils';
 import LoginPage from './LoginPage';
 import { mockAuthState } from '../../test/test-utils';
+import { RootState } from '../../store/store';
 
 describe('LoginPage', () => {
   it('renders login form', () => {
-    render(<LoginPage />);
+    render(<LoginPage />, {
+      preloadedState: {
+        auth: {
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+        },
+      },
+    });
     
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
@@ -17,7 +28,17 @@ describe('LoginPage', () => {
   });
 
   it('validates form inputs', async () => {
-    render(<LoginPage />);
+    render(<LoginPage />, {
+      preloadedState: {
+        auth: {
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+        },
+      },
+    });
     
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
@@ -39,7 +60,18 @@ describe('LoginPage', () => {
   });
 
   it('handles login success', async () => {
-    const { store } = render(<LoginPage />, { route: '/login' });
+    const { store } = render(<LoginPage />, {
+      preloadedState: {
+        auth: {
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+        },
+      },
+      route: '/login',
+    });
     
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
@@ -54,7 +86,8 @@ describe('LoginPage', () => {
 
     // Wait for login to complete and check if user is redirected
     await waitFor(() => {
-      expect(store.getState().auth.isAuthenticated).toBe(true);
+      const state = store.getState() as RootState;
+      expect(state.auth.isAuthenticated).toBe(true);
       expect(window.location.pathname).toBe('/dashboard');
     });
   });
@@ -62,16 +95,27 @@ describe('LoginPage', () => {
   it('handles login failure', async () => {
     // Override the default handler for this test
     server.use(
-      rest.post('/api/v1/auth/login', (req, res, ctx) => {
-        return res(
-          ctx.status(401),
-          ctx.json({ message: 'Invalid credentials' })
+      http.post('/api/v1/auth/login', () => {
+        return new HttpResponse(
+          JSON.stringify({ message: 'Invalid credentials' }),
+          { status: 401 }
         );
       })
     );
 
-    render(<LoginPage />);
-    
+    render(<LoginPage />, { 
+      route: '/login',
+      preloadedState: {
+        auth: {
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+        },
+      },
+    });
+
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole('button', { name: /sign in/i });
@@ -88,7 +132,7 @@ describe('LoginPage', () => {
     render(<LoginPage />, {
       preloadedState: {
         auth: {
-          ...mockAuthState,
+          ...mockAuthState.auth,
           isAuthenticated: true,
         },
       },

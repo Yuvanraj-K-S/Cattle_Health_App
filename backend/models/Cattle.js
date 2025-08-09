@@ -1,135 +1,79 @@
 const mongoose = require('mongoose');
 
+// Define the health reading schema as a subdocument
+const healthReadingSchema = new mongoose.Schema({
+  // Body Temperature in Celsius
+  temperature: {
+    type: Number,
+    required: [true, 'Body temperature is required'],
+    min: [30, 'Body temperature too low'],
+    max: [45, 'Body temperature too high']
+  },
+  
+  // Heart Rate in bpm
+  heartRate: {
+    type: Number,
+    required: [true, 'Heart rate is required'],
+    min: [30, 'Heart rate too low'],
+    max: [120, 'Heart rate too high']
+  },
+  
+  // Sleep Duration in hours
+  sleepDuration: {
+    type: Number,
+    required: [true, 'Sleep duration is required'],
+    min: [0, 'Sleep duration cannot be negative']
+  },
+  
+  // Lying Duration in hours
+  lyingDuration: {
+    type: Number,
+    required: [true, 'Lying duration is required'],
+    min: [0, 'Lying duration cannot be negative']
+  },
+  
+  // Timestamp for the reading
+  recordedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Cattle Schema
 const cattleSchema = new mongoose.Schema({
-  // Basic Information
+  // Required Fields
   tagId: {
     type: String,
-    required: [true, 'Please provide a tag ID'],
-    unique: true,
+    required: [true, 'Tag ID is required'],
     trim: true,
     uppercase: true,
-    match: [/^[A-Z0-9]{6,15}$/, 'Please provide a valid tag ID (6-15 alphanumeric characters)']
-  },
-  name: {
-    type: String,
-    trim: true,
-    maxlength: [50, 'Name cannot exceed 50 characters']
+    index: true
   },
   
-  // Classification
-  species: {
-    type: String,
-    enum: ['cow', 'buffalo', 'goat', 'sheep', 'other'],
-    required: [true, 'Please specify the species']
-  },
-  breed: {
-    type: String,
-    trim: true,
-    maxlength: [50, 'Breed cannot exceed 50 characters']
-  },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other'],
-    required: [true, 'Please specify the gender']
-  },
-  dateOfBirth: {
-    type: Date
-  },
-  
-  // Physical Attributes
-  weight: {
-    value: Number,
-    unit: {
-      type: String,
-      enum: ['kg', 'lbs'],
-      default: 'kg'
-    },
-    lastUpdated: Date
-  },
-  height: {
-    value: Number,
-    unit: {
-      type: String,
-      enum: ['cm', 'inches'],
-      default: 'cm'
-    },
-    lastUpdated: Date
-  },
-  color: {
-    type: String,
-    trim: true
-  },
-  
-  // Health Status
-  healthStatus: {
-    type: String,
-    enum: ['excellent', 'good', 'fair', 'poor', 'critical'],
-    default: 'good'
-  },
-  lastHealthCheck: Date,
-  isPregnant: {
-    type: Boolean,
-    default: false
-  },
-  pregnancyStage: {
-    type: Number, // in days
-    min: 0,
-    max: 290 // typical bovine gestation period
-  },
-  
-  // Location and Grouping
-  location: {
-    type: String,
-    trim: true,
-    maxlength: [100, 'Location cannot exceed 100 characters']
-  },
-  group: {
-    type: String,
-    trim: true,
-    maxlength: [50, 'Group name cannot exceed 50 characters']
-  },
-  
-  // Ownership and Tenancy
+  // Farm Reference
   farm: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Farm',
-    required: [true, 'Cattle must belong to a farm']
+    required: [true, 'Farm reference is required'],
+    index: true
   },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Cattle must have an owner']
+  
+  // Species
+  species: {
+    type: String,
+    required: [true, 'Species is required'],
+    enum: ['cow', 'buffalo', 'goat', 'sheep', 'other'],
+    default: 'cow'
   },
+  
+  // Health Readings
+  healthReadings: [healthReadingSchema],
   
   // Status
   status: {
     type: String,
-    enum: ['active', 'sold', 'deceased', 'transferred', 'other'],
+    enum: ['active', 'inactive'],
     default: 'active'
-  },
-  statusNotes: {
-    type: String,
-    maxlength: [500, 'Status notes cannot exceed 500 characters']
-  },
-  
-  // Timestamps
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  // Soft delete flag
-  isDeleted: {
-    type: Boolean,
-    default: false,
-    select: false
-  },
-  deletedAt: {
-    type: Date,
-    select: false
   }
 }, {
   timestamps: true,
@@ -137,67 +81,57 @@ const cattleSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes for performance
-cattleSchema.index({ tagId: 1 }, { unique: true });
+// Add text index for searching
+cattleSchema.index({ tagId: 'text' });
+
+// Add compound index for unique tagId per farm
+cattleSchema.index({ tagId: 1, farm: 1 }, { unique: true });
+
+// Add index for farm and status for faster queries
 cattleSchema.index({ farm: 1, status: 1 });
-cattleSchema.index({ farm: 1, location: 1 });
 
-// Virtual for age
-cattleSchema.virtual('age').get(function() {
-  if (!this.dateOfBirth) return null;
-  const birthDate = new Date(this.dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  
-  return age;
-});
-
-// Virtual for health readings
-cattleSchema.virtual('healthReadings', {
-  ref: 'HealthReading',
-  localField: '_id',
-  foreignField: 'cattle'
-});
-
-// Query middleware to exclude soft-deleted cattle
-cattleSchema.pre(/^find/, function(next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-// Update the updatedAt timestamp on save
+// Pre-save hook to ensure tagId is uppercase
 cattleSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+  if (this.tagId) {
+    this.tagId = this.tagId.toUpperCase();
+  }
   next();
 });
 
-// Cascade delete health readings when cattle is deleted
-cattleSchema.pre('remove', async function(next) {
-  await this.model('HealthReading').deleteMany({ cattle: this._id });
-  next();
-});
+// Method to add a new health reading
+cattleSchema.methods.addHealthReading = function(readingData) {
+  this.healthReadings.push({
+    temperature: readingData.temperature,
+    heartRate: readingData.heartRate,
+    sleepDuration: readingData.sleepDuration,
+    lyingDuration: readingData.lyingDuration,
+    recordedAt: readingData.recordedAt || new Date()
+  });
+  return this.save();
+};
 
 // Method to get the latest health reading
-cattleSchema.methods.getLatestHealthReading = async function() {
-  return await this.model('HealthReading')
-    .findOne({ cattle: this._id })
-    .sort({ recordedAt: -1 })
-    .limit(1);
+cattleSchema.methods.getLatestHealthReading = function() {
+  if (this.healthReadings.length === 0) return null;
+  return this.healthReadings[this.healthReadings.length - 1];
 };
 
 // Method to check if cattle needs health check
 cattleSchema.methods.needsHealthCheck = function() {
-  if (!this.lastHealthCheck) return true;
+  if (this.healthReadings.length === 0) return true;
   
-  const daysSinceLastCheck = 
-    (new Date() - new Date(this.lastHealthCheck)) / (1000 * 60 * 60 * 24);
+  const lastCheck = new Date(this.healthReadings[this.healthReadings.length - 1].recordedAt);
+  const daysSinceLastCheck = (new Date() - lastCheck) / (1000 * 60 * 60 * 24);
     
   return daysSinceLastCheck > 7; // Check every 7 days
+};
+
+// Static method to find cattle by farm
+cattleSchema.statics.findByFarm = function(farmId, status = 'active') {
+  return this.find({ farm: farmId, status })
+    .sort({ tagId: 1 })
+    .select('tagId species status healthReadings')
+    .lean();
 };
 
 module.exports = mongoose.model('Cattle', cattleSchema);

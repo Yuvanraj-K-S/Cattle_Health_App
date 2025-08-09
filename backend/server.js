@@ -1,4 +1,4 @@
-require('dotenv').config({ path: './config/config.env' });
+require('dotenv').config({ path: './.env' });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -104,11 +104,13 @@ app.get('/health', (req, res) => {
 const authRoutes = require('./routes/auth');
 const farmRoutes = require('./routes/farms');
 const cattleRoutes = require('./routes/cattle');
+const farmCattleRoutes = require('./routes/farmCattle');
 
 // Mount routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/farms', farmRoutes);
 app.use('/api/v1/cattle', cattleRoutes);
+app.use('/api/v1/farms', farmCattleRoutes);
 
 // 404 handler
 app.all('*', (req, res, next) => {
@@ -176,9 +178,14 @@ app.use(errorHandler);
 // Connect to MongoDB
 const DB = process.env.MONGODB_URI || 'mongodb://localhost:27017/cattleMonitor';
 
+// Set mongoose options
+mongoose.set('strictPopulate', false);
+
 mongoose
   .connect(DB, {
-    serverSelectionTimeoutMS: 5000
+    serverSelectionTimeoutMS: 5000,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
   .then(() => {
     console.log('✅ Connected to MongoDB');

@@ -1,5 +1,5 @@
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 // Mock data
 const mockUser = {
@@ -12,47 +12,44 @@ const mockUser = {
 // Mock handlers
 const handlers = [
   // Login
-  rest.post('/api/v1/auth/login', (req, res, ctx) => {
-    const { email, password } = req.body as { email: string; password: string };
+  http.post('/api/v1/auth/login', async ({ request }) => {
+    const { email, password } = await request.json() as { email: string; password: string };
     
     if (email === 'test@example.com' && password === 'password') {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          user: mockUser,
-          token: 'mock-jwt-token',
-        })
-      );
+      return HttpResponse.json({
+        user: mockUser,
+        token: 'mock-jwt-token',
+      }, { status: 200 });
     }
     
-    return res(
-      ctx.status(401),
-      ctx.json({ message: 'Invalid credentials' })
+    return HttpResponse.json(
+      { message: 'Invalid credentials' },
+      { status: 401 }
     );
   }),
 
   // Get current user
-  rest.get('/api/v1/auth/me', (req, res, ctx) => {
-    const authHeader = req.headers.get('Authorization');
+  http.get('/api/v1/auth/me', ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
     
     if (authHeader === 'Bearer mock-jwt-token') {
-      return res(
-        ctx.status(200),
-        ctx.json({ user: mockUser })
+      return HttpResponse.json(
+        { user: mockUser },
+        { status: 200 }
       );
     }
     
-    return res(
-      ctx.status(401),
-      ctx.json({ message: 'Not authenticated' })
+    return HttpResponse.json(
+      { message: 'Not authenticated' },
+      { status: 401 }
     );
   }),
 
   // Logout
-  rest.post('/api/v1/auth/logout', (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ message: 'Logged out successfully' })
+  http.post('/api/v1/auth/logout', () => {
+    return HttpResponse.json(
+      { message: 'Logged out successfully' },
+      { status: 200 }
     );
   }),
 ];

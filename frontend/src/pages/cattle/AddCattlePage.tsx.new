@@ -1,0 +1,408 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Box, 
+  Button, 
+  Container, 
+  MenuItem, 
+  Paper, 
+  Select, 
+  SelectChangeEvent, 
+  TextField, 
+  Typography,
+  Grid,
+  FormHelperText
+} from '@mui/material';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { addCattle } from '../../features/cattle/cattleSlice';
+import { RootState } from '../../store/store';
+
+const AddCattlePage: React.FC = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  
+  interface FormData {
+    tagId: string;
+    location: string;
+    temperature: string;
+    heartRate: string;
+    sleepDuration: string;
+    lyingDuration: string;
+  }
+
+  const [formData, setFormData] = useState<FormData>({
+    tagId: '',
+    location: '',
+    temperature: '',
+    heartRate: '',
+    sleepDuration: '',
+    lyingDuration: '',
+  });
+  
+  const [selectedFarmId, setSelectedFarmId] = useState<string>('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+    
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: ''
+      });
+    }
+  };
+  
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.tagId.trim()) {
+      newErrors.tagId = 'Tag ID is required';
+    }
+    
+    if (!formData.location.trim()) {
+      newErrors.location = 'Location is required';
+    }
+    
+    if (!formData.temperature) {
+      newErrors.temperature = 'Body temperature is required';
+    } else if (isNaN(Number(formData.temperature)) || Number(formData.temperature) <= 0) {
+      newErrors.temperature = 'Please enter a valid temperature';
+    }
+    
+    if (!formData.heartRate) {
+      newErrors.heartRate = 'Heart rate is required';
+    } else if (isNaN(Number(formData.heartRate)) || Number(formData.heartRate) <= 0) {
+      newErrors.heartRate = 'Please enter a valid heart rate';
+    }
+    
+    if (!formData.sleepDuration) {
+      newErrors.sleepDuration = 'Sleep duration is required';
+    } else if (isNaN(Number(formData.sleepDuration)) || Number(formData.sleepDuration) < 0) {
+      newErrors.sleepDuration = 'Please enter a valid duration';
+    }
+    
+    if (!formData.lyingDuration) {
+      newErrors.lyingDuration = 'Lying duration is required';
+    } else if (isNaN(Number(formData.lyingDuration)) || Number(formData.lyingDuration) < 0) {
+      newErrors.lyingDuration = 'Please enter a valid duration';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  const { user } = useAppSelector((state: RootState) => state.auth);
+  
+  // If user has only one farm, select it by default
+  useEffect(() => {
+    if (user?.farms && user.farms.length === 1) {
+      const farmId = user.farms[0]?.farm?._id;
+      if (farmId) {
+        setSelectedFarmId(farmId);
+        console.log('Auto-selected farm:', farmId);
+      } else {
+        console.error('Farm ID is missing in user.farms[0]:', user.farms[0]);
+      }
+    } else if (user?.farms && user.farms.length > 1) {
+      console.log('User has multiple farms, waiting for selection');
+    }
+  }, [user]);
+
+  // Function to handle farm selection
+  const handleFarmSelection = (farmId: string) => {
+    setSelectedFarmId(farmId);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      console.log('Current user object:', JSON.stringify(user, null, 2));
+      
+      // Get the selected farm or the first available farm
+      let farmId = selectedFarmId;
+      
+      if (!farmId && user.farms && user.farms.length > 0) {
+        console.log('Available farms:', JSON.stringify(user.farms, null, 2));
+        farmId = user.farms[0]?.farm?._id || '';
+        console.log('Selected farm ID:', farmId);
+      }
+      
+      if (!farmId) {
+        console.error('No farm ID could be determined from user object');
+        throw new Error('No farm associated with your account. Please contact an administrator to be added to a farm.');
+      }
+      
+      // Prepare the data in the format expected by the backend
+      const cattleData = {
+        tagId: formData.tagId,
+        location: formData.location,
+        temperature: parseFloat(formData.temperature),
+        heartRate: parseInt(formData.heartRate, 10),
+        sleepDuration: parseFloat(formData.sleepDuration),
+        lyingDuration: parseFloat(formData.lyingDuration),
+        status: 'active' as const,
+        lastUpdated: new Date().toISOString(),
+        farm: farmId, // Use the selected farm ID
+      };
+      
+      console.log('Dispatching addCattle with data:', JSON.stringify(cattleData, null, 2));
+      
+      try {
+        const result = await dispatch(addCattle(cattleData)).unwrap();
+        console.log('Cattle added successfully:', result);
+      } catch (error) {
+        console.error('Error in addCattle dispatch:', error);
+        throw error; // Re-throw to be caught by the outer try-catch
+      }
+      
+      // Show success message and redirect to cattle list
+      // dispatch(setAlert({ message: 'Cattle added successfully', type: 'success' }));
+      navigate('/cattle');
+    } catch (error) {
+      console.error('Failed to add cattle:', error);
+      // Handle error (show error message)
+      // dispatch(setAlert({ 
+      //   message: error.message || 'Failed to add cattle', 
+      //   type: 'error' 
+      // }));
+    }
+  };
+  
+  // Show a message if user is not authenticated
+  if (!user) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+          <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
+          <Typography variant="h5" gutterBottom>
+            Authentication Required
+          </Typography>
+          <Typography variant="body1" paragraph>
+            Please log in to add cattle to a farm.
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={() => navigate('/login', { state: { from: '/cattle/add' } })}
+          >
+            Go to Login
+          </Button>
+        </Paper>
+      </Container>
+    );
+  }
+
+  // Show a message if user has no farms
+  if (!user.farms || user.farms.length === 0) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+          <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
+          <Typography variant="h5" gutterBottom>
+            No Farm Associated With Your Account
+          </Typography>
+          <Typography variant="body1" paragraph>
+            You need to be associated with a farm before you can add cattle.
+          </Typography>
+          <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 400, mx: 'auto' }}>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={() => navigate('/farms/create')}
+            >
+              Create a New Farm
+            </Button>
+            <Button 
+              variant="outlined"
+              onClick={() => navigate('/farms/join')}
+            >
+              Join an Existing Farm
+            </Button>
+            <Button 
+              variant="text"
+              startIcon={<ContactSupportIcon />}
+              onClick={() => navigate('/contact-support')}
+            >
+              Contact Support
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        {user.farms && user.farms.length > 1 && (
+          <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Select Farm
+            </Typography>
+            <Select
+              fullWidth
+              value={selectedFarmId || user.farms[0]?.farm?._id || ''}
+              onChange={(e: SelectChangeEvent) => handleFarmSelection(e.target.value)}
+              sx={{ mb: 2 }}
+            >
+              {user.farms.map((farmRef) => (
+                <MenuItem 
+                  key={farmRef.farm?._id} 
+                  value={farmRef.farm?._id}
+                >
+                  {farmRef.farm?.name} ({farmRef.role})
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+        )}
+        
+        <Typography variant="h5" gutterBottom>
+          Add New Cattle Health Data
+        </Typography>
+        
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                id="tagId"
+                name="tagId"
+                label="Tag ID"
+                value={formData.tagId}
+                onChange={handleChange}
+                error={!!errors.tagId}
+                helperText={errors.tagId}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                id="location"
+                name="location"
+                label="Location"
+                value={formData.location}
+                onChange={handleChange}
+                error={!!errors.location}
+                helperText={errors.location}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                id="temperature"
+                name="temperature"
+                label="Body Temperature (°C)"
+                type="number"
+                inputProps={{
+                  step: '0.1',
+                  min: '0'
+                }}
+                value={formData.temperature}
+                onChange={handleChange}
+                error={!!errors.temperature}
+                helperText={errors.temperature}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                id="heartRate"
+                name="heartRate"
+                label="Heart Rate (bpm)"
+                type="number"
+                inputProps={{
+                  min: '0'
+                }}
+                value={formData.heartRate}
+                onChange={handleChange}
+                error={!!errors.heartRate}
+                helperText={errors.heartRate}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                id="sleepDuration"
+                name="sleepDuration"
+                label="Sleep Duration (hrs)"
+                type="number"
+                inputProps={{
+                  step: '0.1',
+                  min: '0'
+                }}
+                value={formData.sleepDuration}
+                onChange={handleChange}
+                error={!!errors.sleepDuration}
+                helperText={errors.sleepDuration}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                id="lyingDuration"
+                name="lyingDuration"
+                label="Lying Duration (hrs)"
+                type="number"
+                inputProps={{
+                  step: '0.1',
+                  min: '0'
+                }}
+                value={formData.lyingDuration}
+                onChange={handleChange}
+                error={!!errors.lyingDuration}
+                helperText={errors.lyingDuration}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/dashboard')}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+              >
+                Save Cattle
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
+    </Container>
+  );
+};
+
+export default AddCattlePage;

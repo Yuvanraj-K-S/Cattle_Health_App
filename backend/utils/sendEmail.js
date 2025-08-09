@@ -2,13 +2,15 @@ const nodemailer = require('nodemailer');
 const pug = require('pug');
 const { htmlToText } = require('html-to-text');
 
-// For development - logs emails to console instead of sending
+// For development - log to console instead of sending real emails
 const devTransport = {
-  host: 'smtp.ethereal.email',
-  port: 587,
+  host: 'localhost',
+  port: 1025,
+  ignoreTLS: true,
+  // These settings are just placeholders since we won't actually send emails in dev
   auth: {
-    user: process.env.ETHEREAL_EMAIL,
-    pass: process.env.ETHEREAL_PASSWORD
+    user: 'development@example.com',
+    pass: 'password'
   }
 };
 
@@ -21,10 +23,22 @@ const prodTransport = {
   }
 };
 
-// Create email transporter based on environment
-const transporter = nodemailer.createTransport(
-  process.env.NODE_ENV === 'production' ? prodTransport : devTransport
-);
+// Create a stub transporter for development that just logs to console
+const devTransporter = {
+  sendMail: (mailOptions) => {
+    console.log('\n===== EMAIL NOT SENT (Development Mode) =====');
+    console.log('To:', mailOptions.to);
+    console.log('Subject:', mailOptions.subject);
+    console.log('Message:', mailOptions.text || mailOptions.html);
+    console.log('=====================================\n');
+    return Promise.resolve({ message: 'Email logged to console (development mode)' });
+  }
+};
+
+// Use real transporter in production, stub in development
+const transporter = process.env.NODE_ENV === 'production' 
+  ? nodemailer.createTransport(prodTransport) 
+  : devTransporter;
 
 // Email template path
 const emailTemplates = {
