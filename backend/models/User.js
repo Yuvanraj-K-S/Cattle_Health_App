@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     minlength: [3, 'Username must be at least 3 characters'],
-    maxlength: [30, 'Username cannot exceed 30 characters']
+    maxlength: [30, 'Username cannot exceed 30 characters'],
+    index: true
   },
   email: {
     type: String,
@@ -47,7 +48,42 @@ const userSchema = new mongoose.Schema({
     match: [/^[0-9]{10}$/, 'Please provide a valid phone number']
   },
   
+  // Tenant and Organization
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    required: [true, 'User must belong to a tenant'],
+    index: true
+  },
+  isTenantAdmin: {
+    type: Boolean,
+    default: false
+  },
+  
   // Role and Permissions
+  role: {
+    type: String,
+    enum: ['user', 'manager', 'admin', 'superadmin'],
+    default: 'user'
+  },
+  permissions: [{
+    type: String,
+    enum: [
+      'read:cattle', 'write:cattle', 'delete:cattle',
+      'read:health', 'write:health', 'delete:health',
+      'manage:users', 'manage:settings'
+    ]
+  }],
+  
+  // Account Status
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
   role: {
     type: String,
     enum: ['farm_owner'],

@@ -32,8 +32,7 @@
     "eject": "react-scripts eject",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss}\"",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
-    "prepare": "husky install"
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix"
   },
   "devDependencies": {
     "@mswjs/data": "^0.16.2",

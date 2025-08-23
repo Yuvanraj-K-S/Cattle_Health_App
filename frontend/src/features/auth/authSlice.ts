@@ -52,7 +52,7 @@ apiClient.interceptors.response.use(
 
     try {
       // Try to refresh the token
-      const response = await apiClient.post('/auth/refresh-token', {}, {
+      const response = await apiClient.post('/api/v1/auth/refresh-token', {}, {
         withCredentials: true // Important for sending HTTP-only cookies
       });
       
@@ -252,13 +252,10 @@ export const register = createAsyncThunk<
     firstName: string;
     lastName: string;
     phone?: string;
-    farmName?: string;
-    farmAddress?: string;
-  },
-  { rejectValue: string }
+  }
 >('auth/register', async (userData, { rejectWithValue }) => {
   try {
-    const response = await apiClient.post('/auth/register', {
+    const response = await apiClient.post('/api/v1/auth/register', {
       username: userData.username,
       email: userData.email,
       password: userData.password,
@@ -281,32 +278,30 @@ export const register = createAsyncThunk<
   }
 });
 
-export const login = createAsyncThunk<
-  { user: User; token: string },
-  { email: string; password: string },
-  { rejectValue: string }
->('auth/login', async (credentials, { rejectWithValue, dispatch }) => {
-  try {
-    const response = await apiClient.post('/auth/login', {
-      email: credentials.email,
-      password: credentials.password
-    }, {
-      withCredentials: true // Important for receiving HTTP-only cookies
-    });
-    
-    if (response.data && response.data.user && response.data.token) {
-      // Update last activity on successful login
-      dispatch(activityDetected());
-      return response.data;
+export const login = createAsyncThunk(
+  'auth/login',
+  async (credentials: { email: string; password: string }, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await apiClient.post('/api/v1/auth/login', credentials);
+      const { token, user } = response.data;
+      
+      // Set the token in the axios headers
+      setAuthToken(token);
+      
+      // Store user data in localStorage
+      setStoredUser(user);
+      
+      // Start session timeout if token has expiration
+      if (response.data.expiresIn) {
+        dispatch(checkAuthTimeout(response.data.expiresIn));
+      }
+      
+      return { user, token };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Login failed');
     }
-    return rejectWithValue('Invalid response from server');
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || 
-                       error.message || 
-                       'Login failed. Please check your credentials and try again.';
-    return rejectWithValue(errorMessage);
   }
-});
+);
 
 export const loadUser = createAsyncThunk<
   User,
@@ -324,7 +319,7 @@ export const loadUser = createAsyncThunk<
     
     // Only fetch user data if we don't already have it
     if (!auth.user) {
-      const response = await apiClient.get('/auth/me');
+      const response = await apiClient.get('/api/v1/auth/me');
       if (!response.data || !response.data.user) {
         throw new Error('Invalid user data received');
       }
@@ -384,7 +379,7 @@ export const checkAuthTimeout = (expirationTime: number) => (dispatch: any) => {
 
 export const logout = createAsyncThunk('auth/logout', async (_, { dispatch }) => {
   try {
-    await apiClient.post('/auth/logout', {}, { withCredentials: true });
+    await apiClient.post('/api/v1/auth/logout', {}, { withCredentials: true });
   } catch (error) {
     console.error('Logout error:', error);
     // Continue with logout even if the server request fails

@@ -23,8 +23,14 @@ exports.register = asyncHandler(async (req, res, next) => {
     lastName, 
     phone,
     farmName,
-    farmAddress
+    farmAddress,
+    tenantId
   } = req.body;
+
+  // Check if tenantId is provided
+  if (!tenantId || !mongoose.Types.ObjectId.isValid(tenantId)) {
+    return next(new ErrorResponse('A valid tenant ID is required for registration', 400));
+  }
 
   // Check if user already exists
   const existingUser = await User.findOne({ 
@@ -49,6 +55,25 @@ exports.register = asyncHandler(async (req, res, next) => {
   }, null, 2));
 
   try {
+    // Verify tenant exists and is active
+    const tenant = await mongoose.model('Tenant').findById(tenantId).select('isActive');
+    
+    if (!tenant) {
+      return next(new ErrorResponse('Invalid tenant ID', 400));
+    }
+
+    if (!tenant.isActive) {
+      return next(new ErrorResponse('The specified tenant account is not active', 400));
+    }
+
+    // Check user limit for the tenant if needed
+    if (tenant.settings?.maxUsers) {
+      const userCount = await User.countDocuments({ tenantId });
+      if (userCount >= tenant.settings.maxUsers) {
+        return next(new ErrorResponse('Maximum number of users reached for this tenant', 400));
+      }
+    }
+
     // Create user
     console.log('Attempting to create user...');
     const userData = {
@@ -59,7 +84,9 @@ exports.register = asyncHandler(async (req, res, next) => {
       lastName,
       phone,
       role: 'farm_owner',
-      isEmailVerified: true // Auto-verify for now
+      tenantId,
+      isEmailVerified: true, // Auto-verify for now
+      isTenantAdmin: false // Default to false, can be updated by tenant admin
     };
 
     console.log('User data prepared for creation:', JSON.stringify({
@@ -74,6 +101,13 @@ exports.register = asyncHandler(async (req, res, next) => {
 
     // If farm details provided, create a farm
     if (farmName) {
+      // Verify the tenant hasn't reached cattle limit if specified
+      if (tenant.settings?.maxCattle) {
+        const cattleCount = await mongoose.model('Cattle').countDocuments({ tenantId });
+        if (cattleCount >= tenant.settings.maxCattle) {
+          return next(new ErrorResponse('Maximum cattle limit reached for this tenant', 400));
+        }
+      }
       console.log('Creating farm...');
       const farmData = {
         name: farmName,
@@ -397,6 +431,59 @@ exports.logout = asyncHandler(async (req, res, next) => {
     success: true,
     data: {}
   });
+});
+
+// @desc    Refresh access token
+// @route   POST /api/v1/auth/refresh-token
+// @access  Public
+exports.refreshToken = asyncHandler(async (req, res, next) => {
+  // Get refresh token from cookie
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return next(new ErrorResponse('No refresh token provided', 401));
+  }
+
+  try {
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'your-refresh-secret');
+    
+    // Find user by ID from token
+    const user = await User.findById(decoded.id).select('+refreshTokens');
+
+    if (!user) {
+      return next(new ErrorResponse('No user found with this id', 404));
+    }
+
+    // Check if refresh token exists in user's refreshTokens array
+    const tokenIndex = user.refreshTokens.findIndex(
+      token => token.token === refreshToken
+    );
+
+    if (tokenIndex === -1) {
+      return next(new ErrorResponse('Invalid refresh token', 401));
+    }
+
+    // Generate new access token
+    const accessToken = user.getSignedJwtToken();
+
+    // Send response with new access token
+    res.status(200).json({
+      success: true,
+      token: accessToken,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        farms: user.farms
+      }
+    });
+  } catch (err) {
+    return next(new ErrorResponse('Invalid refresh token', 401));
+  }
 });
 
 // Helper function to get token from model, create cookie and send response

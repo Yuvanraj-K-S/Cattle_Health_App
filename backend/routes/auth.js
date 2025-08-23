@@ -10,20 +10,23 @@ const {
   forgotPassword,
   resetPassword,
   confirmEmail,
-  logout
+  logout,
+  refreshToken
 } = require('../controllers/auth');
 
 // Public routes
 router.post('/register', register);
 router.post('/login', login);
-router.get('/confirmemail', confirmEmail);
-router.post('/forgotpassword', forgotPassword);
-router.put('/resetpassword/:resettoken', resetPassword);
+router.post('/refresh-token', refreshToken);
+router.get('/confirm-email', confirmEmail);
+router.post('/forgot-password', forgotPassword);
+router.put('/reset-password/:resettoken', resetPassword);
 
 // Protected routes (require authentication)
-router.get('/me', protect, getMe);
-router.put('/updatedetails', protect, updateDetails);
-router.put('/updatepassword', protect, updatePassword);
-router.get('/logout', protect, logout);
+router.use(protect);
+router.get('/me', getMe);
+router.put('/update-details', updateDetails);
+router.put('/update-password', updatePassword);
+router.post('/logout', logout);
 
 module.exports = router;

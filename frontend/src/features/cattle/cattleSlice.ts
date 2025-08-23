@@ -78,29 +78,31 @@ interface FetchCattleParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-export const fetchCattle = createAsyncThunk<CattleResponse, FetchCattleParams | undefined, { state: RootState }>(
+export const fetchCattle = createAsyncThunk<CattleResponse, FetchCattleParams & { farmId?: string } | undefined, { state: RootState }>(
   'cattle/fetchCattle',
   async (params = {}, { getState }) => {
     const { auth } = getState();
-    // Get the user's default farm ID
-    const defaultFarmId = auth.user?.farms?.[0]?.farm?._id;
+    const { farmId: paramFarmId, ...queryParams } = params;
     
-    if (!defaultFarmId) {
-      throw new Error('No farm associated with your account');
+    // Use provided farmId or get from user's first farm
+    const farmId = paramFarmId || auth.user?.farms?.[0]?.farm?._id;
+    
+    if (!farmId) {
+      throw new Error('No farm specified and no default farm available for the user');
     }
+
+    // Convert query parameters to URLSearchParams
+    const queryString = new URLSearchParams();
     
-    // Prepare query parameters
-    const { page = 1, limit = 10, search, sortBy, sortOrder } = params;
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(search && { search }),
-      ...(sortBy && { sortBy }),
-      ...(sortOrder && { sortOrder })
+    // Add all non-undefined query parameters
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        queryString.append(key, value.toString());
+      }
     });
-    
-    // Fetch cattle for the user's default farm with pagination
-    const response = await apiClient.get(`/farms/${defaultFarmId}/cattle?${queryParams}`);
+
+    // Make the API request with the farm ID in the path
+    const response = await apiClient.get(`/api/v1/farms/${farmId}/cattle?${queryString.toString()}`);
     
     // Log the raw response for debugging
     console.group('Raw API Response');
@@ -206,8 +208,8 @@ export const addCattle = createAsyncThunk<CattleResponse, Omit<CattleData, '_id'
         })
       };
       
-      // Add cattle with the initial health reading
-      const response = await apiClient.post('/cattle', requestData);
+      // Add cattle with the initial health reading using the farm-specific endpoint
+      const response = await apiClient.post(`/api/v1/farms/${farmId}/cattle`, requestData);
       
       // Format the response to match our frontend structure
       const formattedResponse = {

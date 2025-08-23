@@ -44,11 +44,22 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
+    mongoUrl: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cattle_health?retryWrites=true&w=majority',
+    mongoOptions: {
+      // Remove deprecated options
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4, // Use IPv4, skip trying IPv6
+    },
+    collectionName: 'sessions',
     ttl: 14 * 24 * 60 * 60, // 14 days
     autoRemove: 'interval',
     autoRemoveInterval: 10, // In minutes
     touchAfter: 24 * 3600, // 24 hours
+    stringify: false,
+    crypto: process.env.NODE_ENV === 'production' ? {
+      secret: process.env.SESSION_ENCRYPTION_KEY
+    } : undefined,
   }),
   cookie: {
     secure: NODE_ENV === 'production',
