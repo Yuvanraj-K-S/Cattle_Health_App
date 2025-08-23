@@ -85,23 +85,11 @@ process.on('unhandledRejection', (err) => {
   });
 });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('❌ UNCAUGHT EXCEPTION! Shutting down...');
-  console.error(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
-// Start the application
-startServer();
-
-// Handle SIGTERM (for Docker, Kubernetes, etc.)
-process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
-  server.close(() => {
-    console.log('💥 Process terminated!');
-    process.exit(0);
-  });
-});
+const PORT = 3001;
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
