@@ -1,3 +1,12 @@
+// Check if user is authenticated
+const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+
+// Redirect to auth page if not authenticated
+if (!isAuthenticated && !window.location.pathname.endsWith('auth.html')) {
+    window.location.href = 'auth.html';
+}
+
+// Global variables
 let profile = true; // true means closed, false means open
 let options = true;
 let healthAlerts = [];

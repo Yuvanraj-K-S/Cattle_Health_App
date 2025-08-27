@@ -1,5 +1,5 @@
 const axios = require("axios");
-const BASE_URL = "http://localhost:3001/api/cattle";
+const BASE_URL = "http://localhost:3001/api/farms";
 
 // Healthy ranges for cattle
 const HEALTHY_RANGES = {
@@ -63,18 +63,19 @@ class CattleSimulator {
 }
 
 class SimulationManager {
-  constructor() {
+  constructor(farmId) {
+    this.farmId = farmId;
     this.simulators = new Map();
   }
 
   async initialize() {
     await this._updateCattleList();
-    setInterval(() => this._updateAndSimulate(), 60000); // Check every 5 seconds
+    setInterval(() => this._updateAndSimulate(), 60000); // Check every minute
   }
 
   async _updateCattleList() {
     try {
-      const response = await axios.get(BASE_URL);
+      const response = await axios.get(`${BASE_URL}/${this.farmId}/cattle`);
       const cattleList = response.data;
 
       cattleList.forEach(cattle => {
@@ -97,7 +98,7 @@ class SimulationManager {
     for (const [cattleId, simulator] of this.simulators) {
       try {
         const reading = simulator.generateReading();
-        await axios.post(`${BASE_URL}/${cattleId}/readings`, reading);
+await axios.post(`${BASE_URL}/${this.farmId}/cattle/${cattleId}/readings`, reading);
         console.log(`📊 ${simulator.tagId}:`, 
           `Temp:${reading.body_temperature}°C`,
           `HR:${reading.heart_rate}bpm`,
@@ -111,5 +112,6 @@ class SimulationManager {
   }
 }
 
-// Start the simulation
-new SimulationManager().initialize().catch(err => console.error("Initialization failed:", err));
+// Start the simulation with a specific farm ID
+const farmId = process.env.FARM_ID || 'default-farm-id';
+new SimulationManager(farmId).initialize().catch(err => console.error("Initialization failed:", err));
