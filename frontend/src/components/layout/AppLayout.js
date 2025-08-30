@@ -98,9 +98,27 @@ const AppLayout = ({ children }) => {
                   }}
                   aria-label="User menu"
                   aria-expanded={showDropdown}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    borderRadius: '50%',
+                    transition: 'background-color 0.2s',
+                  }}
                 >
-                  <i className="fas fa-user-circle"></i>
-                  <span className="user-email">{user.email}</span>
+                  <img 
+                    src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" 
+                    alt="Profile" 
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      objectFit: 'cover'
+                    }}
+                  />
                 </button>
                 {showDropdown && (
                   <div className="dropdown-menu">
