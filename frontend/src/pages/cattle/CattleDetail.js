@@ -184,51 +184,32 @@ const CattleDetail = () => {
       // Add the new health reading
       const result = await addHealthReading(id, newReading);
       
-      if (result && result.success) {
-        // Update the local cow state with the new reading
-        const updatedCow = {
-          ...cow,
-          health_readings: [
-            ...(cow.health_readings || []),
-            { 
-              ...newReading, 
-              _id: Date.now().toString(), // Temporary ID until next refresh
-              tag_id: cow.tag_id // Ensure tag_id is included in local state
-            }
-          ]
-        };
-        
-        setCow(updatedCow);
-        
-        // Show success message
-        setNotification({
-          show: true,
-          message: 'Health reading added successfully!',
-          type: 'success'
-        });
-        
-        // Reset the form
-        setHealthForm({
-          date: new Date().toISOString().split('T')[0],
-          body_temperature: '',
-          heart_rate: '',
-          sleeping_duration: '',
-          lying_down_duration: ''
-        });
-        
-        // Only close the form if we're not in the health tab
-        if (activeTab !== 'health') {
-          setTimeout(() => {
-            setShowHealthForm(false);
-            setNotification({ show: false, message: '', type: '' });
-          }, 2000);
-        } else {
-          setTimeout(() => {
-            setNotification({ show: false, message: '', type: '' });
-          }, 3000);
-        }
+      // Show success message
+      setNotification({
+        show: true,
+        message: 'Health reading added successfully!',
+        type: 'success'
+      });
+      
+      // Reset the form
+      setHealthForm({
+        date: new Date().toISOString().split('T')[0],
+        body_temperature: '',
+        heart_rate: '',
+        sleeping_duration: '',
+        lying_down_duration: ''
+      });
+      
+      // Only close the form if we're not in the health tab
+      if (activeTab !== 'health') {
+        setTimeout(() => {
+          setShowHealthForm(false);
+          setNotification({ show: false, message: '', type: '' });
+        }, 2000);
       } else {
-        throw new Error('Failed to add health reading');
+        setTimeout(() => {
+          setNotification({ show: false, message: '', type: '' });
+        }, 3000);
       }
     } catch (err) {
       console.error('Error adding health reading:', err);

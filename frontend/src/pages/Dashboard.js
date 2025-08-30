@@ -5,7 +5,7 @@ import { formatDate } from '../utils/dateUtils';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { cattle, loading, error, fetchCattle } = useCattle();
+  const { cattle, loading, error, refreshCattle } = useCattle();
   const [stats, setStats] = useState({
     total: 0,
     healthy: 0,
@@ -19,14 +19,14 @@ const Dashboard = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        await fetchCattle();
+        await refreshCattle();
       } catch (err) {
         console.error('Failed to fetch cattle data:', err);
       }
     };
     
     loadData();
-  }, [fetchCattle]);
+  }, [refreshCattle]);
 
   useEffect(() => {
     if (cattle.length > 0) {

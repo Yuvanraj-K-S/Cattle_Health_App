@@ -92,7 +92,8 @@ exports.getAllCattle = catchAsync(async (req, res, next) => {
         return next(new AppError('Farm ID is required', 400));
     }
     
-    const cattle = await Cattle.find({ farm_id: farmId });
+    // Ensure farmId is treated as a string in the query
+    const cattle = await Cattle.find({ farm_id: String(farmId) });
     
     res.status(200).json({
         status: 'success',
@@ -113,7 +114,7 @@ exports.getCattle = catchAsync(async (req, res, next) => {
 
     const cattle = await Cattle.findOne({ 
         _id: req.params.id, 
-        farm_id: farmId 
+        farm_id: String(farmId) // Ensure farmId is treated as a string
     }).lean();
 
     if (!cattle) {
@@ -150,7 +151,7 @@ exports.updateCattle = catchAsync(async (req, res, next) => {
     }
     
     const cattle = await Cattle.findOneAndUpdate(
-        { _id: req.params.id, farm_id: farmId },
+        { _id: req.params.id, farm_id: String(farmId) }, // Ensure farmId is treated as a string
         req.body,
         { new: true, runValidators: true }
     );
@@ -177,7 +178,7 @@ exports.deleteCattle = catchAsync(async (req, res, next) => {
     
     const cattle = await Cattle.findOneAndDelete({ 
         _id: req.params.id, 
-        farm_id: farmId 
+        farm_id: String(farmId) // Ensure farmId is treated as a string
     });
     
     if (!cattle) {
@@ -341,7 +342,7 @@ exports.getCattleStats = catchAsync(async (req, res, next) => {
     const { farmId } = req.user;
     
     // First, check if any cattle exist for this farm
-    const cattleCount = await Cattle.countDocuments({ farm_id: farmId });
+    const cattleCount = await Cattle.countDocuments({ farm_id: String(farmId) });
     
     if (cattleCount === 0) {
         return res.status(200).json({
@@ -355,7 +356,7 @@ exports.getCattleStats = catchAsync(async (req, res, next) => {
     
     const stats = await Cattle.aggregate([
         {
-            $match: { farm_id: farmId }
+            $match: { farm_id: String(farmId) }
         },
         {
             $project: {

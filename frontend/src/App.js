@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CattleProvider } from './contexts/CattleContext';
 import PrivateRoute from './components/common/PrivateRoute';
@@ -24,16 +24,14 @@ function App() {
             <Route path="/register" element={<Register />} />
             
             {/* Protected Routes */}
-            <Route path="/" element={
-              <PrivateRoute>
-                <AppLayout />
-              </PrivateRoute>
-            }>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="cattle" element={<CattleList />} />
-              <Route path="cattle/new" element={<CattleForm />} />
-              <Route path="cattle/:id" element={<CattleDetail />} />
+            <Route element={<PrivateRoute />}>
+              <Route element={<AppLayout />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="cattle" element={<CattleList />} />
+                <Route path="cattle/new" element={<CattleForm />} />
+                <Route path="cattle/:id" element={<CattleDetail />} />
+              </Route>
             </Route>
             
             {/* 404 Route */}

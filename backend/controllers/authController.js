@@ -138,7 +138,7 @@ exports.protect = async (req, res, next) => {
         const decoded = await jwt.verify(token, JWT_SECRET);
 
         // 3) Check if user still exists
-        const currentUser = await User.findById(decoded.id);
+        const currentUser = await User.findOne({ _id: decoded.id });
         if (!currentUser) {
             return res.status(401).json({
                 status: 'error',
@@ -153,6 +153,14 @@ exports.protect = async (req, res, next) => {
             email: currentUser.email,
             name: currentUser.name
         };
+        
+        // Make sure farmId is a string and not undefined
+        if (!req.user.farmId) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'User is not associated with a farm. Please contact support.'
+            });
+        }
         next();
     } catch (err) {
         return res.status(401).json({

@@ -1,25 +1,47 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI, getCurrentUser } from '../services/api';
+import { authAPI, getCurrentUser, logout as apiLogout } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = async () => {
+      console.log('AuthContext - Starting authentication check...');
       try {
-        const currentUser = getCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
+        const token = localStorage.getItem('token');
+        console.log('AuthContext - Token from localStorage:', token ? 'Token exists' : 'No token');
+        
+        if (token) {
+          console.log('AuthContext - Found token, fetching current user...');
+          const currentUser = await getCurrentUser();
+          console.log('AuthContext - Current user from API:', currentUser);
+          
+          if (currentUser) {
+            console.log('AuthContext - User authenticated successfully');
+            setUser(currentUser);
+            setIsAuthenticated(true);
+          } else {
+            console.log('AuthContext - No valid user found, clearing invalid token');
+            localStorage.removeItem('token');
+            setIsAuthenticated(false);
+          }
+        } else {
+          console.log('AuthContext - No token found, user is not authenticated');
+          setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('AuthContext - Authentication check failed:', error);
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
       } finally {
+        console.log('AuthContext - Authentication check complete');
         setLoading(false);
       }
     };
@@ -33,21 +55,22 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(credentials);
       
       // Log the complete response for debugging
-      console.log('Login response:', {
-        hasToken: !!response?.token,
-        hasUserData: !!response?.data?.user,
-        userEmail: response?.data?.user?.email
-      });
+      console.log('Login response:', response);
       
-      if (!response?.data?.user) {
-        throw new Error('Invalid response format from server');
+      // Get the user data from the response
+      const userData = response.data?.user || response.user;
+      
+      if (!userData) {
+        throw new Error('No user data received in login response');
       }
       
       // Set the user in context
-      setUser(response.data.user);
+      setUser(userData);
+      setIsAuthenticated(true);
       
       // Verify token is in localStorage
       const storedToken = localStorage.getItem('token');
+      console.log('Stored token:', storedToken ? 'Token exists' : 'No token found');
       console.log('Token verification - stored in localStorage:', !!storedToken);
       
       return { 
@@ -74,6 +97,7 @@ export const AuthProvider = ({ children }) => {
       // Store the token
       localStorage.setItem('token', token);
       setUser(user);
+      setIsAuthenticated(true);
       
       return { success: true };
     } catch (error) {
@@ -85,16 +109,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    navigate('/login');
+  const logout = async () => {
+    try {
+      // Call the API logout function to clear the token
+      await apiLogout();
+      // Clear user and authentication state
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('token');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Clear user data and token
+      setUser(null);
+      localStorage.removeItem('token');
+      navigate('/login');
+    }
   };
 
   const value = {
     user,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     login,
     register,
     logout,
@@ -102,7 +138,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

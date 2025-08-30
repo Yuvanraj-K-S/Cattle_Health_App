@@ -312,17 +312,17 @@ export const CattleProvider = ({ children }) => {
   // Context value
   const value = {
     cattle,
-    stats,
     loading,
     error,
-    farmId: user?.farmId,
+    stats,
     addCattle,
     updateCattle,
     deleteCattle,
     addHealthReading,
     getHealthReadings,
-    refreshCattle: fetchCattle,
-    refreshStats: fetchStats,
+    fetchStats,
+    fetchCattle, // Make sure fetchCattle is included in the context value
+    refreshCattle: fetchCattle, // Also keep the alias for backward compatibility
   };
 
   return (
