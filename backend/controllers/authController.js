@@ -138,7 +138,8 @@ exports.protect = async (req, res, next) => {
         const decoded = await jwt.verify(token, JWT_SECRET);
 
         // 3) Check if user still exists
-        const currentUser = await User.findOne({ _id: decoded.id });
+        // Use findById for better performance and safety
+        const currentUser = await User.findById(decoded.id).select('+farmId');
         if (!currentUser) {
             return res.status(401).json({
                 status: 'error',

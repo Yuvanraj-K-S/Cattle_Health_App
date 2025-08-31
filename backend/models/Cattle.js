@@ -30,8 +30,7 @@ const healthReadingSchema = new mongoose.Schema({
 const cattleSchema = new mongoose.Schema({
     tag_id: { 
         type: String, 
-        required: [true, 'Tag ID is required'],
-        unique: true 
+        required: [true, 'Tag ID is required']
     },
     farm_id: { 
         type: String, 
@@ -72,13 +71,16 @@ const cattleSchema = new mongoose.Schema({
     }
 });
 
-// Index for faster querying
-cattleSchema.index({ farm_id: 1, tag_id: 1 });
+// Compound index to ensure unique tag_id per farm
+cattleSchema.index({ farm_id: 1, tag_id: 1 }, { unique: true });
 
-// Pre-save hook to ensure farm_id is set
+// Pre-save hook to ensure both farm_id and tag_id are set
 cattleSchema.pre('save', function(next) {
     if (!this.farm_id) {
         throw new Error('Farm ID is required');
+    }
+    if (!this.tag_id) {
+        throw new Error('Tag ID is required');
     }
     next();
 });
