@@ -18,6 +18,9 @@ router.route('/:id/readings')
   .get(cattleController.getHealthReadings)
   .post(cattleController.addHealthReading);
 
+// Reset cattle health status
+router.patch('/:id/reset-health', cattleController.resetCattleHealth);
+
 // Individual cattle operations - must be defined last to avoid route conflicts
 router.route('/:id')
   .get(cattleController.getCattle)

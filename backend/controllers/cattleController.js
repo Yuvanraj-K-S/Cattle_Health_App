@@ -341,6 +341,50 @@ exports.getHealthReadings = catchAsync(async (req, res, next) => {
     });
 });
 
+// Reset cattle health status and reading counts
+exports.resetCattleHealth = catchAsync(async (req, res, next) => {
+    const { farmId } = req.user;
+    
+    if (!farmId) {
+        return next(new AppError('Farm ID is required', 400));
+    }
+    
+    // Find the cattle and verify ownership
+    const cattle = await Cattle.findOne({ 
+        _id: req.params.id, 
+        farm_id: farmId 
+    });
+
+    if (!cattle) {
+        return next(new AppError('No cattle found with that ID or you do not have permission to update it', 404));
+    }
+
+    // Reset health status and reading counts
+    cattle.health_status = 'Healthy';
+    cattle.healthy_readings_count = 0;
+    cattle.risk_readings_count = 0;
+    cattle.last_health_check = new Date();
+    
+    // Save the updated cattle document
+    await cattle.save();
+
+    // Update user's cattle counts
+    await updateUserCattleCounts(farmId);
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            cattle: {
+                _id: cattle._id,
+                tag_id: cattle.tag_id,
+                health_status: cattle.health_status,
+                healthy_readings_count: cattle.healthy_readings_count,
+                risk_readings_count: cattle.risk_readings_count
+            }
+        }
+    });
+});
+
 // Get cattle statistics for the farm
 exports.getCattleStats = catchAsync(async (req, res, next) => {
     const { farmId } = req.user;

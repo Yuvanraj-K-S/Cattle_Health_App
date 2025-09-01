@@ -139,6 +139,11 @@ export const cattleAPI = {
       }
       return response.json();
     }),
+    
+  resetCattleHealth: (id) => 
+    apiRequest(`/cattle/${id}/reset-health`, {
+      method: 'PATCH',
+    }),
 };
 
 // Auth helper functions

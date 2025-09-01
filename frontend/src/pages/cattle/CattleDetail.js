@@ -117,11 +117,34 @@ const CattleDetail = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const updatedCow = await updateCattle(id, formData);
-      setCow(updatedCow);
+      const updatedCattle = await updateCattle(id, formData);
+      setCow(updatedCattle);
       setIsEditing(false);
-    } catch (err) {
-      console.error('Error updating cattle:', err);
+    } catch (error) {
+      console.error('Error updating cattle:', error);
+    }
+  };
+
+  // Handle resetting cattle health status
+  const handleResetHealth = async () => {
+    if (window.confirm('Are you sure you want to mark this cattle as resolved? This will reset all health readings.')) {
+      try {
+        const response = await cattleAPI.resetCattleHealth(id);
+        // Update the local state with the reset values
+        setCow(prev => ({
+          ...prev,
+          health_status: 'Healthy',
+          healthy_readings_count: 0,
+          risk_readings_count: 0,
+          last_health_check: new Date().toISOString()
+        }));
+        
+        // Show success message
+        alert('Cattle health status has been reset to healthy.');
+      } catch (error) {
+        console.error('Error resetting cattle health:', error);
+        alert('Failed to reset cattle health status. Please try again.');
+      }
     }
   };
 
@@ -376,9 +399,19 @@ const CattleDetail = () => {
                 <button 
                   className="btn btn-primary"
                   onClick={() => setShowHealthForm(true)}
+                  style={{ marginRight: '10px' }}
                 >
                   Add Health Reading
                 </button>
+                {cow.health_status === 'At risk' && (
+                  <button 
+                    className="btn btn-success"
+                    onClick={handleResetHealth}
+                    title="Mark as resolved and reset health readings"
+                  >
+                    <i className="fas fa-check-circle"></i> Mark as Resolved
+                  </button>
+                )}
               </>
             )}
           </div>
