@@ -39,6 +39,15 @@ exports.createCattle = catchAsync(async (req, res, next) => {
         return next(new AppError('Farm ID is required', 400));
     }
     
+    // Check if cattle with the same tag_id already exists in the same farm
+    const existingCattle = await Cattle.findOne({ 
+        tag_id: req.body.tag_id,
+        farm_id: farmId
+    });
+    if (existingCattle) {
+        return next(new AppError('A cattle with this tag ID already exists in your farm', 400));
+    }
+    
     // Ensure farm_id from request body matches the authenticated user's farm ID
     if (req.body.farm_id && req.body.farm_id !== farmId) {
         return next(new AppError('You can only create cattle for your own farm', 403));
