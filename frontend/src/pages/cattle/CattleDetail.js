@@ -62,6 +62,7 @@ const CattleDetail = () => {
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Handle tab from URL, location state, and show health form if needed
   useEffect(() => {
@@ -126,26 +127,37 @@ const CattleDetail = () => {
   };
 
   // Handle resetting cattle health status
-  const handleResetHealth = async () => {
-    if (window.confirm('Are you sure you want to mark this cattle as resolved? This will reset all health readings.')) {
-      try {
-        const response = await cattleAPI.resetCattleHealth(id);
-        // Update the local state with the reset values
-        setCow(prev => ({
-          ...prev,
-          health_status: 'Healthy',
-          healthy_readings_count: 0,
-          risk_readings_count: 0,
-          last_health_check: new Date().toISOString()
-        }));
-        
-        // Show success message
-        alert('Cattle health status has been reset to healthy.');
-      } catch (error) {
-        console.error('Error resetting cattle health:', error);
-        alert('Failed to reset cattle health status. Please try again.');
-      }
+  const handleResetHealth = () => {
+    setShowResetConfirm(true);
+  };
+
+  // Confirm reset action
+  const confirmResetHealth = async () => {
+    try {
+      const response = await cattleAPI.resetCattleHealth(id);
+      // Update the local state with the reset values
+      setCow(prev => ({
+        ...prev,
+        health_status: 'Healthy',
+        healthy_readings_count: 0,
+        risk_readings_count: 0,
+        last_health_check: new Date().toISOString()
+      }));
+      
+      // Close the modal
+      setShowResetConfirm(false);
+      
+      // Show success message
+      alert('Cattle health status has been reset to healthy.');
+    } catch (error) {
+      console.error('Error resetting cattle health:', error);
+      alert('Failed to reset cattle health status. Please try again.');
     }
+  };
+  
+  // Cancel reset action
+  const cancelResetHealth = () => {
+    setShowResetConfirm(false);
   };
 
   // Handle health analysis
@@ -921,6 +933,36 @@ const CattleDetail = () => {
                 )}
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Health Confirmation Modal */}
+      {showResetConfirm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Confirm Reset</h3>
+              <button className="close-btn" onClick={cancelResetHealth}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to mark this cattle as resolved?</p>
+              <p>This will reset all health readings and set the status to Healthy.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="btn btn-outline" 
+                onClick={cancelResetHealth}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-danger" 
+                onClick={confirmResetHealth}
+              >
+                Confirm Reset
+              </button>
+            </div>
           </div>
         </div>
       )}

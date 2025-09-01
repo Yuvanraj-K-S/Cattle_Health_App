@@ -229,18 +229,13 @@ const CattleList = () => {
                         >
                           <i className="fas fa-heartbeat"></i> Analyze
                         </button>
-                        <button 
+                        <Link 
+                          to={`/cattle/${cow._id}`}
                           className="btn btn-success btn-sm"
-                          title="Add Health Reading"
-                          onClick={() => {
-                            navigate(`/cattle/${cow._id}`, { 
-                              state: { showHealthForm: true },
-                              search: '?tab=health'
-                            });
-                          }}
+                          title="View Cattle Details"
                         >
-                          <i className="fas fa-plus-circle"></i> Add reading
-                        </button>
+                          <i className="fas fa-eye"></i> View Cattle
+                        </Link>
                         <Link 
                           to={`/cattle/${cow._id}`} 
                           className="btn-icon"
