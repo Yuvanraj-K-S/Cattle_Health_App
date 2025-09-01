@@ -102,19 +102,31 @@ const Dashboard = () => {
       </div>
       
       <div className="stats-container">
-        <div className="stat-card total">
+        <div 
+          className="stat-card total" 
+          onClick={() => navigate('/cattle')}
+          style={{ cursor: 'pointer' }}
+        >
           <h3>Total Cattle</h3>
           <div className="stat-value">{stats.total}</div>
           <div className="stat-icon">🐄</div>
         </div>
         
-        <div className="stat-card healthy">
+        <div 
+          className="stat-card healthy"
+          onClick={() => navigate('/cattle?status=healthy')}
+          style={{ cursor: 'pointer' }}
+        >
           <h3>Healthy</h3>
           <div className="stat-value">{stats.healthy}</div>
           <div className="stat-icon">✅</div>
         </div>
         
-        <div className="stat-card critical">
+        <div 
+          className="stat-card critical"
+          onClick={() => navigate('/cattle?status=at_risk')}
+          style={{ cursor: 'pointer' }}
+        >
           <h3>At Risk</h3>
           <div className="stat-value">{stats.critical}</div>
           <div className="stat-icon">🚨</div>

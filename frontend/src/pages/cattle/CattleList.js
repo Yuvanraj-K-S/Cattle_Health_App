@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCattle } from '../../contexts/CattleContext';
 import { formatDate } from '../../utils/dateUtils';
 import { toast } from 'react-toastify';
@@ -12,8 +12,11 @@ const CattleList = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'tag_id', direction: 'asc' });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [cattleToDelete, setCattleToDelete] = useState(null);
-    const [analyzing, setAnalyzing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [healthStatuses, setHealthStatuses] = useState({});
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const statusFilter = searchParams.get('status');
   
   const navigate = useNavigate();
   
@@ -41,15 +44,29 @@ const CattleList = () => {
     }
   }, [safeCattle]); // Re-run when cattle data changes
   
-  // Handle search
+  // Handle search and status filtering
   const filteredCattle = safeCattle.filter(cow => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      cow.tag_id.toLowerCase().includes(searchLower) ||
-      (cow.breed && cow.breed.toLowerCase().includes(searchLower)) ||
-      (cow.location && cow.location.toLowerCase().includes(searchLower)) ||
-      (cow.notes && cow.notes.toLowerCase().includes(searchLower))
-    );
+    // Apply status filter if present
+    if (statusFilter) {
+      if (statusFilter === 'healthy' && cow.health_status !== 'Healthy') {
+        return false;
+      } else if (statusFilter === 'at_risk' && cow.health_status !== 'At risk' && cow.health_status !== 'At Risk') {
+        return false;
+      }
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        cow.tag_id.toLowerCase().includes(searchLower) ||
+        (cow.breed && cow.breed.toLowerCase().includes(searchLower)) ||
+        (cow.location && cow.location.toLowerCase().includes(searchLower)) ||
+        (cow.notes && cow.notes.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    return true;
   });
 
   // Handle sorting
