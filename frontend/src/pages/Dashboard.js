@@ -129,8 +129,10 @@ const Dashboard = () => {
               {recentActivity.map(activity => (
                 <div key={`${activity.id}-${activity.date}`} className={`activity-item ${activity.status}`}>
                   <div className="activity-meta">
-                    <span className="activity-tag">#{activity.tagId}</span>
-                    <span className="activity-date">{formatDate(activity.date, { relative: true })}</span>
+                    <span className="activity-tag">🐄 {activity.tagId}</span>
+                    <span className="activity-date">
+                      {activity.date ? formatDate(activity.date, { relative: true }) : 'Just now'}
+                    </span>
                   </div>
                   <div className="activity-details">
                     <span>🌡️ {activity.temperature}°F</span>
