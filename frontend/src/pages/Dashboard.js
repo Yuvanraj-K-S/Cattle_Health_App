@@ -37,18 +37,17 @@ const Dashboard = () => {
       let critical = 0;
       
       cattle.forEach(cow => {
-        if (cow.health_readings && cow.health_readings.length > 0) {
-          const latestReading = cow.health_readings.reduce((latest, current) => {
-            return new Date(latest.date) > new Date(current.date) ? latest : current;
-          }, cow.health_readings[0]);
-          
-          if (latestReading.body_temperature > 102.5 || latestReading.heart_rate > 80) {
+        switch (cow.health_status) {
+          case 'At risk':
             critical++;
-          } else if (latestReading.body_temperature > 101.5 || latestReading.heart_rate > 70) {
+            break;
+          case 'Needs Attention':
             needsAttention++;
-          } else {
+            break;
+          case 'Healthy':
+          default:
             healthy++;
-          }
+            break;
         }
       });
       

@@ -231,18 +231,13 @@ exports.addHealthReading = catchAsync(async (req, res, next) => {
         lying_down_duration
     });
 
-    // Update health counts
+    // Update health counts and status based on the latest reading
     if (isHealthy) {
         cattle.healthy_readings_count += 1;
+        cattle.health_status = 'Healthy';
     } else {
         cattle.risk_readings_count += 1;
-    }
-
-    // Update health status if needed
-    if (cattle.risk_readings_count >= cattle.healthy_readings_count) {
         cattle.health_status = 'At risk';
-    } else {
-        cattle.health_status = 'Healthy';
     }
 
     // Create the new health reading with the cattle's tag_id
