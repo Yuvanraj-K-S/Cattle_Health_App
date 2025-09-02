@@ -109,36 +109,132 @@ const AppLayout = ({ children }) => {
                     transition: 'background-color 0.2s',
                   }}
                 >
-                  <img 
-                    src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" 
-                    alt="Profile" 
+                  <div 
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '40px',
+                      height: '40px',
                       borderRadius: '50%',
-                      objectFit: 'cover'
+                      backgroundColor: user?.name ? '#4f46e5' : '#f0f4f8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid #e0e7ff',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      color: '#ffffff',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      textTransform: 'uppercase'
                     }}
-                  />
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    {user?.name ? (
+                      // Show user initials if name exists
+                      user.name.split(' ').map(n => n[0]).join('').substring(0, 2)
+                    ) : (
+                      // Fallback to user icon if no name
+                      <i className="fas fa-user" style={{ color: '#4f46e5' }}></i>
+                    )}
+                  </div>
                 </button>
                 {showDropdown && (
-                  <div className="dropdown-menu">
-                    <div className="dropdown-header">
-                      <div className="user-info">
-                        <div className="user-avatar">
-                          <i className="fas fa-user"></i>
+                  <div className="dropdown-menu" style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '100%',
+                    marginTop: '8px',
+                    minWidth: '220px',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    zIndex: 1000,
+                    overflow: 'hidden',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <div className="dropdown-header" style={{
+                      padding: '16px',
+                      backgroundColor: '#f8fafc',
+                      borderBottom: '1px solid #e2e8f0'
+                    }}>
+                      <div className="user-info" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}>
+                        <div className="user-avatar" style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '50%',
+                          backgroundColor: '#4f46e5',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '18px',
+                          flexShrink: 0
+                        }}>
+                          {user?.name ? (
+                            user.name.split(' ').map(n => n[0]).join('').substring(0, 2)
+                          ) : (
+                            <i className="fas fa-user"></i>
+                          )}
                         </div>
-                        <div>
-                          <div className="user-name">{user.name || user.email}</div>
-                          <div className="user-email">{user.email}</div>
+                        <div style={{ overflow: 'hidden' }}>
+                          <div className="user-name" style={{
+                            fontWeight: '600',
+                            fontSize: '15px',
+                            color: '#1e293b',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {user?.name || 'User'}
+                          </div>
+                          <div className="user-email" style={{
+                            fontSize: '13px',
+                            color: '#64748b',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {user?.email || ''}
+                          </div>
                         </div>
                       </div>
                     </div>
                     <div className="dropdown-divider"></div>
                     <button 
                       onClick={handleLogout} 
-                      className="dropdown-item"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '12px 16px',
+                        background: 'none',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        color: '#1e293b',
+                        transition: 'all 0.2s',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        ':hover': {
+                          backgroundColor: '#f8fafc',
+                          color: '#4f46e5'
+                        }
+                      }}
                     >
-                      <i className="fas fa-sign-out-alt"></i> Logout
+                      <i className="fas fa-sign-out-alt" style={{ width: '20px', textAlign: 'center' }}></i>
+                      <span>Sign out</span>
                     </button>
                   </div>
                 )}

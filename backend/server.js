@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // Connect to MongoDB with better error handling
-mongoose.connect('mongodb://localhost:27017/cattleMonitor', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cattleMonitor', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000
