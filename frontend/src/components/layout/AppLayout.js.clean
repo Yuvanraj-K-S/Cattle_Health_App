@@ -1,0 +1,406 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import './AppLayout.css';
+
+// Debug component to verify rendering
+const DebugBanner = ({ user }) => (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    background: 'red',
+    color: 'white',
+    padding: '10px',
+    zIndex: 100,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: '18px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+    opacity: 0.8
+  }}>
+    {user ? `AppLayout Rendered (${user.email})` : 'AppLayout Rendered (No User)'}
+  </div>
+);
+
+const AppLayout = ({ children }) => {
+  const { user, logout, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDropdown && !event.target.closest('.user-menu')) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDropdown]);
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    await logout();
+    navigate('/login');
+  };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
+
+  return (
+    <div className="app-layout" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <DebugBanner user={user} />
+      
+      {/* Navigation Bar */}
+      <header className="app-header" style={{
+        backgroundColor: '#2c3e50',
+        color: 'white',
+        padding: '0.75rem 0',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        position: 'fixed',
+        width: '100%',
+        top: 0,
+        zIndex: 1000,
+        height: '60px',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <div className="container" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%'
+          }}>
+            <Link to="/dashboard" className="logo" style={{ color: 'white', textDecoration: 'none' }}>
+              <h1 style={{ margin: 0, fontSize: '1.5rem' }}>Cattle Health</h1>
+            </Link>
+            
+            <nav className="main-nav" style={{ display: 'flex', gap: '20px' }}>
+              <Link 
+                to="/dashboard" 
+                style={{
+                  color: location.pathname === '/dashboard' ? '#4f46e5' : 'white',
+                  textDecoration: 'none',
+                  fontWeight: location.pathname === '/dashboard' ? '600' : '400',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Dashboard
+              </Link>
+              <Link 
+                to="/cattle" 
+                style={{
+                  color: location.pathname.startsWith('/cattle') ? '#4f46e5' : 'white',
+                  textDecoration: 'none',
+                  fontWeight: location.pathname.startsWith('/cattle') ? '600' : '400',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Cattle
+              </Link>
+            </nav>
+            
+            {user ? (
+              <div className="user-menu" style={{ position: 'relative' }}>
+                <input 
+                  type="checkbox" 
+                  id="menu-button"
+                  className="menu-button__input"
+                  checked={showDropdown}
+                  onChange={(e) => setShowDropdown(e.target.checked)}
+                  style={{ display: 'none' }}
+                />
+                <label 
+                  htmlFor="menu-button" 
+                  className="menu-button"
+                  style={{
+                    position: 'absolute',
+                    right: '0',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    zIndex: 1001,
+                    border: '2px solid #e0e7ff',
+                  }}
+                >
+                  <span 
+                    className="menu-button__icon"
+                    style={{
+                      position: 'relative',
+                      width: '20px',
+                      height: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <span 
+                      className="menu-button__icon-strip"
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        height: '2px',
+                        backgroundColor: '#fff',
+                        borderRadius: '2px',
+                        transition: 'all 0.3s ease',
+                        transform: showDropdown ? 'rotate(45deg) translate(5px, 5px)' : 'none',
+                      }}
+                    ></span>
+                    <span 
+                      className="menu-button__icon-strip"
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        height: '2px',
+                        backgroundColor: '#fff',
+                        borderRadius: '2px',
+                        transition: 'all 0.3s ease',
+                        opacity: showDropdown ? '0' : '1',
+                        transform: showDropdown ? 'scale(0)' : 'scale(1)',
+                      }}
+                    ></span>
+                    <span 
+                      className="menu-button__icon-strip"
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        height: '2px',
+                        backgroundColor: '#fff',
+                        borderRadius: '2px',
+                        transition: 'all 0.3s ease',
+                        transform: showDropdown ? 'rotate(-45deg) translate(5px, -5px)' : 'none',
+                      }}
+                    ></span>
+                  </span>
+                </label>
+                
+                <div 
+                  className="nav__inner"
+                  style={{
+                    position: 'absolute',
+                    right: '0',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '150px',
+                    height: showDropdown ? '150px' : '40px',
+                    padding: '15px',
+                    borderRadius: '75px',
+                    overflow: 'hidden',
+                    background: '#fff',
+                    boxShadow: 'inset 0px 0px 12px rgba(0,0,0,.15)',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transformOrigin: 'top right',
+                    opacity: showDropdown ? '1' : '0',
+                    visibility: showDropdown ? 'visible' : 'hidden',
+                    zIndex: 1000,
+                  }}
+                >
+                  <div style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    paddingTop: '30px',
+                  }}>
+                    <div className="nav__avatar" style={{
+                      position: 'relative',
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      marginBottom: '15px',
+                      border: '3px solid #fff',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}>
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: '#4f46e5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '24px',
+                        fontWeight: 'bold'
+                      }}>
+                        {user?.name ? 
+                          user.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 
+                          <i className="fas fa-user"></i>
+                        }
+                      </div>
+                    </div>
+                    
+                    <div className="nav-list" style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '15px',
+                      marginTop: '10px'
+                    }}>
+                      <Link 
+                        to="/profile"
+                        className="nav-list__url"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          backgroundColor: '#f8fafc',
+                          color: '#4f46e5',
+                          transition: 'all 0.2s ease',
+                          textDecoration: 'none',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+                        }}
+                      >
+                        <i className="fas fa-user-cog" style={{ fontSize: '16px' }}></i>
+                      </Link>
+                      
+                      <Link
+                        to="/settings"
+                        className="nav-list__url"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          backgroundColor: '#f8fafc',
+                          color: '#4f46e5',
+                          transition: 'all 0.2s ease',
+                          textDecoration: 'none',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+                        }}
+                      >
+                        <i className="fas fa-cog" style={{ fontSize: '16px' }}></i>
+                      </Link>
+                      
+                      <button
+                        onClick={handleLogout}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          backgroundColor: '#fef2f2',
+                          color: '#dc2626',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+                        }}
+                      >
+                        <i className="fas fa-sign-out-alt" style={{ fontSize: '16px' }}></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="auth-links" style={{ display: 'flex', gap: '12px' }}>
+                <Link 
+                  to="/login" 
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    color: '#2c3e50',
+                    backgroundColor: 'white',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Log In
+                </Link>
+                <Link 
+                  to="/register" 
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    color: 'white',
+                    backgroundColor: '#4f46e5',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: '#4338ca'
+                    }
+                  }}
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main style={{ marginTop: '60px', flex: 1, padding: '20px' }}>
+        {children || <Outlet />}
+      </main>
+
+      <footer style={{
+        backgroundColor: '#2c3e50',
+        color: 'white',
+        padding: '1rem 0',
+        textAlign: 'center',
+        marginTop: 'auto'
+      }}>
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+          <p style={{ margin: 0 }}>© {new Date().getFullYear()} Cattle Health Monitor. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default AppLayout;

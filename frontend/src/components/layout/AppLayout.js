@@ -90,60 +90,20 @@ const AppLayout = ({ children }) => {
             
             {user ? (
               <div className="user-menu">
-                <button 
-                  className="dropdown-toggle" 
+                <div 
+                  className="user-avatar"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowDropdown(!showDropdown);
                   }}
                   aria-label="User menu"
                   aria-expanded={showDropdown}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '4px 8px',
-                    borderRadius: '50%',
-                    transition: 'background-color 0.2s',
-                  }}
                 >
-                  <div 
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      backgroundColor: user?.name ? '#4f46e5' : '#f0f4f8',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '2px solid #e0e7ff',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      color: '#ffffff',
-                      fontWeight: 'bold',
-                      fontSize: '16px',
-                      textTransform: 'uppercase'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.1)';
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                    }}
-                  >
-                    {user?.name ? (
-                      // Show user initials if name exists
-                      user.name.split(' ').map(n => n[0]).join('').substring(0, 2)
-                    ) : (
-                      // Fallback to user icon if no name
-                      <i className="fas fa-user" style={{ color: '#4f46e5' }}></i>
-                    )}
-                  </div>
-                </button>
+                  <span className="username">
+                    {user.name || user.email.split('@')[0]}
+                  </span>
+                  <i className="fas fa-caret-down"></i>
+                </div>
                 {showDropdown && (
                   <div className="dropdown-menu" style={{
                     position: 'absolute',
@@ -168,73 +128,44 @@ const AppLayout = ({ children }) => {
                         alignItems: 'center',
                         gap: '12px'
                       }}>
-                        <div className="user-avatar" style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          backgroundColor: '#4f46e5',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          fontSize: '18px',
-                          flexShrink: 0
-                        }}>
-                          {user?.name ? (
-                            user.name.split(' ').map(n => n[0]).join('').substring(0, 2)
+                        <div className="user-avatar large">
+                          {user.name ? (
+                            <span>{user.name.charAt(0).toUpperCase()}</span>
                           ) : (
                             <i className="fas fa-user"></i>
                           )}
                         </div>
-                        <div style={{ overflow: 'hidden' }}>
-                          <div className="user-name" style={{
-                            fontWeight: '600',
-                            fontSize: '15px',
-                            color: '#1e293b',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {user?.name || 'User'}
-                          </div>
-                          <div className="user-email" style={{
-                            fontSize: '13px',
-                            color: '#64748b',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {user?.email || ''}
-                          </div>
+                        <div className="user-details">
+                          <div className="user-name">{user.name || 'User'}</div>
+                          <div className="user-email">{user.email}</div>
+                          {user.role && <div className="user-role">{user.role}</div>}
                         </div>
                       </div>
                     </div>
                     <div className="dropdown-divider"></div>
+                    <Link to="/profile" className="dropdown-item" onClick={() => setShowDropdown(false)}>
+                      <i className="fas fa-user"></i>
+                      <span>My Profile</span>
+                    </Link>
+                    <Link to="/settings" className="dropdown-item" onClick={() => setShowDropdown(false)}>
+                      <i className="fas fa-cog"></i>
+                      <span>Settings</span>
+                    </Link>
+                    <Link to="/notifications" className="dropdown-item" onClick={() => setShowDropdown(false)}>
+                      <i className="fas fa-bell"></i>
+                      <span>Notifications</span>
+                    </Link>
+                    <div className="dropdown-divider"></div>
                     <button 
-                      onClick={handleLogout} 
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '12px 16px',
-                        background: 'none',
-                        border: 'none',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        color: '#1e293b',
-                        transition: 'all 0.2s',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        ':hover': {
-                          backgroundColor: '#f8fafc',
-                          color: '#4f46e5'
-                        }
+                      className="dropdown-item logout" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowDropdown(false);
+                        handleLogout(e);
                       }}
                     >
-                      <i className="fas fa-sign-out-alt" style={{ width: '20px', textAlign: 'center' }}></i>
-                      <span>Sign out</span>
+                      <i className="fas fa-sign-out-alt"></i>
+                      <span>Logout</span>
                     </button>
                   </div>
                 )}

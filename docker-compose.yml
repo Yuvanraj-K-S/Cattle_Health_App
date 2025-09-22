@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/cattleMonitor
+      - JWT_SECRET=your_secure_jwt_secret
+      - PORT=3001
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - cattle-network
+
+  mongo:
+    image: mongo:6.0
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=cattleMonitor
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+    networks:
+      - cattle-network
+
+  # Optional: Add MongoDB Express for database management
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+    depends_on:
+      - mongo
+    networks:
+      - cattle-network
+
+networks:
+  cattle-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
