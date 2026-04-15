@@ -73,9 +73,9 @@ export const AuthProvider = ({ children }) => {
       console.log('Stored token:', storedToken ? 'Token exists' : 'No token found');
       console.log('Token verification - stored in localStorage:', !!storedToken);
       
-      return { 
+      return {
         success: true,
-        user: response.data.user 
+        user: response.user
       };
       
     } catch (error) {

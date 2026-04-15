@@ -28,7 +28,7 @@ docker-compose down --remove-orphans
 docker-compose up -d --build
 
 # Wait for services to start
-echo -e "${YELLOW}⏳ Waiting for services to start...${NC}
+echo -e "${YELLOW}⏳ Waiting for services to start...${NC}"
 sleep 10
 
 # Check if services are running

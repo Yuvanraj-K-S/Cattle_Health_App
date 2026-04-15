@@ -1,14 +1,15 @@
 from flask import Flask, request, jsonify
 import joblib
 import numpy as np
+import os
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
 # Load model and scaler
-model = joblib.load(r'models\cattle_health_model.joblib')
-scaler = joblib.load(r'models\scaler.joblib')
+model = joblib.load(os.path.join(os.path.dirname(__file__), 'models', 'cattle_health_model.joblib'))
+scaler = joblib.load(os.path.join(os.path.dirname(__file__), 'models', 'scaler.joblib'))
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -44,4 +45,4 @@ def predict():
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', debug=False, port=5000)

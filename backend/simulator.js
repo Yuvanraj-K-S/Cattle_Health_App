@@ -1,5 +1,5 @@
 const axios = require("axios");
-const BASE_URL = "http://localhost:3001/api/farms";
+const BASE_URL = "http://localhost:3001/api/v1/cattle";
 
 // Healthy ranges for cattle
 const HEALTHY_RANGES = {

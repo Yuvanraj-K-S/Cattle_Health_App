@@ -1,42 +1,24 @@
-# Build stage
+# Build stage — build the React frontend
 FROM node:18-alpine AS builder
 
-# Create app directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY frontend/ ./frontend/
+COPY backend/ ./backend/
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Build the frontend
-RUN cd ../frontend && \
-    npm install && \
-    npm run build
+RUN cd frontend && npm install && npm run build
 
 # Production stage
 FROM node:18-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY backend/package*.json ./backend/
+RUN cd backend && npm ci --only=production
 
-# Install production dependencies only
-RUN npm ci --only=production
+COPY --from=builder /app/frontend/build ./frontend/build
+COPY backend/ ./backend/
 
-# Copy built frontend
-COPY --from=builder /usr/src/app/../frontend/build ../frontend/build
-
-# Copy backend source
-COPY . .
-
-# Expose the app port
 EXPOSE 3001
 
-# Start the application
-CMD ["node", "server.js"]
+CMD ["node", "backend/server.js"]

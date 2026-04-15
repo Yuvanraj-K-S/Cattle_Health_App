@@ -1,23 +1,25 @@
 const API_BASE_URL = 'http://localhost:3001/api/v1';
 
-// Helper function to handle API requests
+// Helper function to handle API requests.
+// Contract: callers must JSON.stringify() the body before passing it in options.body.
+// apiRequest passes body through as-is — it does NOT call JSON.stringify internally.
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
+  const { skipAuth, ...fetchOptions } = options;
   const headers = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...fetchOptions.headers,
   };
 
-  if (token) {
+  if (token && !skipAuth) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
   try {
-    // Don't stringify the body here since it's already stringified in the authAPI.register function
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
+      ...fetchOptions,
       headers,
-      body: options.body, // Remove JSON.stringify here since it's already stringified
+      body: fetchOptions.body,
     });
 
     // Check if response has content before parsing as JSON
@@ -61,20 +63,12 @@ export const authAPI = {
     }),
 
   login: async (credentials) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const data = await apiRequest('/auth/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(credentials),
+      skipAuth: true,
     });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
-    }
-    
+
     // Store the token from the response
     if (data && data.token) {
       localStorage.setItem('token', data.token);
@@ -83,7 +77,7 @@ export const authAPI = {
       console.error('No token received in login response');
       throw new Error('No authentication token received');
     }
-    
+
     // Return the complete response data
     return data;
   },
